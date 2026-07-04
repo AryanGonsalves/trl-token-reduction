@@ -1,0 +1,41 @@
+# --- secrets & local run artifacts (NEVER commit) ---
+# local launchers; may contain pasted API keys (gitignore has no inline comments!)
+*.bat
+.env
+.env.*
+*_result.txt
+validate_*.txt
+diag_*.txt
+proxy_test_result.txt
+config.local.yaml
+
+# --- python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- retrieval index caches ---
+.trl_index.json
+.trl_index/
+*.trlindex
+*.trlindex.json
+
+# --- editor / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- extension build ---
+extension/*.zip
+
+# internal handoff/strategy doc — keep local, do not publish
+CONTEXT.md

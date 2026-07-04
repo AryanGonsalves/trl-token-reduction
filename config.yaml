@@ -1,0 +1,88 @@
+# ---------------------------------------------------------------------------
+# Token-Reduction Benchmark config
+# The whole point of this file: make the go/no-go criteria explicit and
+# pre-registered, BEFORE you look at results. Do not move these after a run.
+# ---------------------------------------------------------------------------
+
+big_model:
+  # provider: mock | anthropic | openai
+  provider: mock
+  anthropic_model: claude-sonnet-4-5
+  openai_model: gpt-4.1
+  # Prices are $ per 1M tokens. UPDATE these to today's real numbers before
+  # you quote dollars anywhere. Placeholders are illustrative only.
+  price_in_per_mtok: 3.00
+  price_out_per_mtok: 15.00
+  price_cached_in_per_mtok: 0.30   # native prompt-cache read price (~10% of input)
+  # auth for the anthropic arm: auto (prefer subscription OAuth token) | subscription | api_key
+  anthropic_auth: auto
+
+
+claude_cli:
+  # Run big-model calls through the local Claude Code CLI on your SUBSCRIPTION.
+  # provider name = "claude-cli". Measures subscription usage, not metered API.
+  bin: claude                 # or full path / "claude.cmd" on Windows
+  model: ""                   # "" = subscription default; or e.g. claude-sonnet-4-5
+  timeout_s: 120
+  use_subscription: true      # true = force OAuth (strip API keys); false = use claude's own auth
+  extra_args: []              # e.g. ["--allowedTools", ""]
+
+
+local_model:
+  # The preprocessor. Small on purpose: its job is extract/summarize/dedupe,
+  # not frontier reasoning. Reached via Ollama HTTP; heuristic fallback if down.
+  provider: mock             # mock | ollama | none  (mock = competent-local-model stand-in, offline)
+  model: qwen2.5:7b-instruct
+  endpoint: http://localhost:11434
+  # Local inference is not free in wall-clock; it IS free in API dollars.
+  # We still count its cost against savings via this notional rate so the
+  # net-savings number is honest rather than gross.
+  notional_cost_per_mtok: 0.05
+
+arms:
+  baseline:
+    # HONEST baseline MUST use native prompt caching, or you credit your layer
+    # with the provider's own feature and the benchmark is a lie.
+    native_prompt_cache: true
+  treatment:
+    native_prompt_cache: true
+    compress_history: true
+    compress_tool_outputs: true
+    # compression_mode: safe | aggressive
+    #   safe       -> only remove provably-redundant material
+    #   aggressive -> summarize harder; expect quality delta to appear
+    compression_mode: safe
+
+subscription_model:
+  # Models a Claude-Code / Cursor style usage budget. Consumption is treated as
+  # proportional to tokens processed. This is what "stop hitting weekly limits"
+  # actually attacks. Weights are a modelling choice; tune to observed behavior.
+  input_weight: 1.0
+  output_weight: 4.0
+  weekly_budget_units: 2000000
+
+# --- PRE-REGISTERED GO/NO-GO (set once, never move) ------------------------
+gates:
+  # Non-inferiority: treatment task-success must not be worse than baseline by
+  # more than this margin (as a proportion). 0.01 = "within 1 point".
+  quality_noninferiority_margin: 0.01
+  # Kill condition: if net quality-neutral savings on a FAVORABLE workload come
+  # in below this multiple vs the cache-enabled baseline, the thesis is weak.
+  min_savings_multiple_favorable: 2.0
+
+seed: 7
+
+suite:
+  # sizes for the realistic verifier suite. Bigger = tighter CI but more
+  # API/subscription calls (each task runs BOTH arms).
+  n_favorable: 30
+  n_unfavorable: 10
+
+retrieval:
+  # v0.5 lever: replace whole-file code dumps with only the relevant AST slices.
+  # Local (tree-sitter), zero API tokens, exact slices (quality-safe). Applied at
+  # context-assembly time; its lean output then flows through cache + compress.
+  enabled: true
+  token_budget: 800      # max tokens of retrieved code per request
+  k: 8                   # max symbols returned
+  expand_call_graph: true

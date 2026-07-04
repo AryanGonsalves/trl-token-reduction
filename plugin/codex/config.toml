@@ -1,0 +1,15 @@
+# Codex retrieval plugin — merge this into ~/.codex/config.toml (global) or
+# .codex/config.toml (project-scoped; trusted projects only).
+#
+# Same STDIO MCP server as the Claude Code plugin — the protocol is client-neutral,
+# so nothing about the server changes. Edit the two paths if the project moves.
+# Set TRL_REPO to the repo you want Codex to retrieve from ("." = the cwd Codex runs in).
+
+[mcp_servers.trl-retrieve]
+command = "python"
+args = ["-m", "plugin.mcp_server"]
+env = { PYTHONPATH = "/ABSOLUTE/PATH/TO/trl-token-reduction", TRL_REPO = "." }
+
+# Optional — route Codex's API-key calls through the token-reduction proxy too
+# (applies to API-key mode, not ChatGPT-subscription mode):
+#   openai_base_url = "http://localhost:8899/v1"

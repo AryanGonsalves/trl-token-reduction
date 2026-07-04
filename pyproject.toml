@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trl-token-reduction"
+version = "0.1.0"
+description = "Vendor-neutral token-reduction layer for LLM apps and agents: caching, compression+fact-guard, AST/text retrieval, and cascade — with published quality-neutrality benchmarks."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Aryan Gonsalves" }]
+requires-python = ">=3.9"
+keywords = ["llm", "tokens", "cost", "retrieval", "compression", "mcp", "proxy", "agents", "claude", "openai", "codex"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = []   # core runs on stdlib; real arms use optional extras below
+
+[project.optional-dependencies]
+retrieval = [
+    "tree_sitter>=0.21", "tree_sitter_python>=0.21", "tree_sitter_javascript>=0.21",
+    "tree_sitter_typescript>=0.21", "tree_sitter_go>=0.21", "tree_sitter_rust>=0.21",
+    "tree_sitter_java>=0.21", "tree_sitter_c_sharp>=0.21", "tree_sitter_c>=0.21",
+    "tree_sitter_cpp>=0.21", "tree_sitter_ruby>=0.21", "tree_sitter_php>=0.22",
+    "tree_sitter_kotlin>=1.0", "pathspec>=0.11",
+]
+proxy = ["pyyaml>=6.0", "tiktoken>=0.7.0"]
+models = ["anthropic>=0.40.0", "openai>=1.40.0", "tiktoken>=0.7.0"]
+mcp = ["mcp>=1.0"]
+embed = ["model2vec>=0.3"]
+pdf = ["pypdf>=4.0"]
+all = [
+    "tree_sitter>=0.21", "tree_sitter_python>=0.21", "tree_sitter_javascript>=0.21",
+    "tree_sitter_typescript>=0.21", "tree_sitter_go>=0.21", "tree_sitter_rust>=0.21",
+    "tree_sitter_java>=0.21", "tree_sitter_c_sharp>=0.21", "tree_sitter_c>=0.21",
+    "tree_sitter_cpp>=0.21", "tree_sitter_ruby>=0.21", "tree_sitter_php>=0.22",
+    "tree_sitter_kotlin>=1.0", "pathspec>=0.11",
+    "pyyaml>=6.0", "tiktoken>=0.7.0", "anthropic>=0.40.0", "openai>=1.40.0",
+    "mcp>=1.0", "model2vec>=0.3", "pypdf>=4.0",
+]
+dev = ["pytest>=7.0"]
+
+[project.urls]
+Homepage = "https://github.com/AryanGonsalves/trl-token-reduction"
+Repository = "https://github.com/AryanGonsalves/trl-token-reduction"
+
+[project.scripts]
+trl-proxy = "proxy.server:main"
+trl-retrieve = "plugin.mcp_server:main"
+trl-cli = "plugin.cli:main"
+
+[tool.setuptools]
+packages = ["trl", "trl.retrieval", "proxy", "plugin"]
+
+[tool.setuptools.package-data]
+# NB: the bare glob does NOT match dotfiles -- .mcp.json must be listed explicitly
+plugin = ["claude-code/*", "claude-code/.mcp.json", "codex/*"]

@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "python",
+      "args": [
+        "-m",
+        "plugin.mcp_server"
+      ],
+      "cwd": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+        "TRL_REPO": "."
+      }
+    }
+  }
+}

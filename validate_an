@@ -1,0 +1,11 @@
+model: claude-haiku-4-5-20251001
+NAIVE  billed input tokens =  1264  answer = '7391'
+PROXY  billed input tokens =   477  answer = '7391'
+-> 62% fewer billed tokens; correct(7391): True
+DONE
+model: claude-haiku-4-5-20251001
+api reachable + model OK
+NAIVE  billed input tokens =  1264  answer = '7391'
+PROXY  billed input tokens =   477  answer = '7391'
+-> 62% fewer billed tokens; correct(7391): True
+DONE

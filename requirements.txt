@@ -1,0 +1,26 @@
+# Core benchmark runs offline in --mock mode with zero deps beyond stdlib.
+# The extras below are only needed for real arms:
+pyyaml>=6.0          # config loading (optional; a tiny fallback parser is bundled)
+anthropic>=0.40.0    # real Claude arm
+openai>=1.40.0       # real GPT arm
+tiktoken>=0.7.0      # tokenizer-aware counting for GPT models
+# Local preprocessor model is reached over HTTP (Ollama). No python dep required.
+# v0.5 retrieval lever (local AST slicing; zero API tokens)
+tree_sitter>=0.21
+tree_sitter_python>=0.21
+tree_sitter_javascript>=0.21
+tree_sitter_typescript>=0.21
+pathspec>=0.11        # .gitignore-aware indexing (optional; falls back to a hardcoded ignore set)
+# v0.6 optional semantic rerank (retrieval falls back to keyword-only without it)
+model2vec>=0.3        # static embeddings, no torch; or use sentence-transformers
+tree_sitter_go>=0.21
+tree_sitter_rust>=0.21
+tree_sitter_java>=0.21
+tree_sitter_c_sharp>=0.21
+tree_sitter_c>=0.21
+tree_sitter_cpp>=0.21
+tree_sitter_ruby>=0.21
+tree_sitter_php>=0.22
+tree_sitter_kotlin>=1.0
+# MCP plugin server (Claude Code / Codex integration)
+mcp>=1.0

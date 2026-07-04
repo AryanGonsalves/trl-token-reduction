@@ -43,3 +43,9 @@ The extension now works with **no server at all** — it compresses in your brow
 (`trl-proxy`) is optional and gives stronger compression; when it's not running,
 the built-in compressor is used automatically. This is what makes the Chrome Web
 Store version usable by non-technical people with a single click.
+
+## Developer mode: stronger local engine (optional)
+The Chrome Web Store build is pure zero-install (compresses in the browser). If you
+want the stronger engine-backed compression, run it unpacked and add
+`"http://localhost:8899/*"` back to `host_permissions` in manifest.json, then run
+`trl-proxy`. Regular users never need this.

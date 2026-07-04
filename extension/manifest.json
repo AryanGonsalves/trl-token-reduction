@@ -1,26 +1,43 @@
 {
   "manifest_version": 3,
-  "name": "TRL Composer — token saver for Claude.ai",
+  "name": "TRL Composer \u2014 token saver for Claude.ai",
   "version": "0.1.0",
-  "description": "Shrink pasted context in the Claude.ai message box before you send it, so you use fewer tokens. Works offline; preview + number-guard included.",
-  "permissions": ["storage"],
-  "host_permissions": [
-    "https://claude.ai/*",
-    "http://localhost:8899/*",
-    "http://127.0.0.1:8899/*"
+  "description": "Compress pasted context in Claude.ai before you send, so you use fewer tokens. Works offline, preview-first, keeps numbers.",
+  "permissions": [
+    "storage"
   ],
-  "background": { "service_worker": "background.js" },
+  "host_permissions": [
+    "https://claude.ai/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
-      "matches": ["https://claude.ai/*"],
-      "js": ["compress.js", "content.js"],
-      "css": ["content.css"],
+      "matches": [
+        "https://claude.ai/*"
+      ],
+      "js": [
+        "compress.js",
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
       "run_at": "document_idle"
     }
   ],
-  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "action": {
     "default_title": "TRL Composer",
-    "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   }
 }

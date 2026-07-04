@@ -32,14 +32,15 @@ Productivity
 
 ## Permission justifications (for the review form)
 - storage: remember the user's local settings in their browser.
+- host access to claude.ai: place the Compress button and read/replace the message-box text, only on click. No remote servers; all compression happens in the browser.
 - host access to claude.ai: place the Compress button and read/replace the message-box text on click.
-- host access to localhost:8899: reach the OPTIONAL local engine on the user's own machine; never a remote server.
 
 ## Privacy policy URL
-Host PRIVACY.md (e.g. the GitHub repo raw URL) and paste that link in the listing.
+Use the public repo copy:
+https://github.com/AryanGonsalves/trl-token-reduction/blob/main/extension/PRIVACY.md
 
 ## Assets you still need to provide (can't be auto-generated)
-- [ ] At least one 1280x800 (or 640x400) screenshot of the Compress button + preview on claude.ai.
+- [x] Screenshot 1280x800 provided: `store-screenshot-1280x800.png` (this folder).
 - [ ] 128x128 store icon (included: icons/icon128.png).
 - [ ] Optional 440x280 small promo tile.
 
@@ -49,3 +50,7 @@ Host PRIVACY.md (e.g. the GitHub repo raw URL) and paste that link in the listin
 2. Upload trl-composer-extension-v0.1.0.zip.
 3. Fill the listing using the copy above; add the screenshot and privacy-policy URL.
 4. Submit for review (typically a few days).
+
+## Data-use disclosure (Dashboard 'Privacy' tab)
+Declare: does NOT collect or use user data. No data leaves the user's machine;
+compression runs in the browser. Check the 'I do not sell/transfer data' boxes.

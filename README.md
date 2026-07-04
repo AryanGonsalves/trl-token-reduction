@@ -44,7 +44,20 @@ against live models**, and every number here is the **provider's own reported
 billed token count** (OpenAI `usage.prompt_tokens`; Anthropic `usage.input_tokens`
 including cache) — not our estimate, not a mock.
 
-| Real-model run | Reduction | Quality / correctness |
+**Flagship models, heavy tasks (the headline result).** Run on the two most advanced
+models available, over heavy tasks built from *real* content (the project's own docs
+and code, ~6–10k tokens each), baseline vs token-reduced:
+
+| Flagship model | Input tokens | Quality |
+|----------------|--------------|---------|
+| **OpenAI GPT-5.5** | **16,875 → 2,232 (86.8% fewer)** | **3/3 → 3/3, non-inferior PASS** |
+| **Anthropic Claude Opus 4.8** | **26,573 → 3,343 (87.4% fewer)** | **3/3 → 3/3, non-inferior PASS** |
+
+~87% of input tokens removed on the current frontier, with quality fully preserved on
+both. (Reproduce: `validate/heavy_bench.py`, hard-capped at $1.80/provider.) The three
+tasks are a long-document QA, a bloated agent turn, and a code-context QA.
+
+| Earlier single-lever / mid-tier runs | Reduction | Quality / correctness |
 |----------------|-----------|-----------------------|
 | Realistic verifier suite — **OpenAI**, safe mode | **2.59× cheaper**, 43.1% fewer input tokens, 62.7% fewer sub-units | 100% → 100%, non-inferiority **PASS** |
 | Live proxy, one bloated turn — **OpenAI gpt-4o-mini** | **1,672 → 730** billed input tokens (**56.3% fewer**) | output correct, fact-guard held |

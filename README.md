@@ -140,7 +140,7 @@ Want a document shrunk before it hits the model? Add a non-standard
 `documents: [...]` field to the request — the proxy retrieves only the relevant
 passages and injects them, instead of you pasting the whole file.
 
-### 2. Coding-agent plugin (Claude Code / any MCP client)
+### 2. Coding-agent plugin (Claude Code, Codex, or any MCP client)
 Installs an MCP server `trl-retrieve` exposing `retrieve_code(query)` and
 `explain_symbol(name)`. Your agent asks for *code that answers a question* and
 gets AST slices (file:line + source) instead of stuffing whole files. Drop

@@ -37,6 +37,28 @@ long-standing story is **3–10× on favorable workloads, modest on pure novel
 reasoning.** The point of the 18× demo is that the levers stack multiplicatively,
 not the exact figure.
 
+## Validated on real APIs (billed tokens, not estimates)
+
+The benchmarks above run offline. But the levers were also proven **end-to-end
+against live models**, and every number here is the **provider's own reported
+billed token count** (OpenAI `usage.prompt_tokens`; Anthropic `usage.input_tokens`
+including cache) — not our estimate, not a mock.
+
+| Real-model run | Reduction | Quality / correctness |
+|----------------|-----------|-----------------------|
+| Realistic verifier suite — **OpenAI**, safe mode | **2.59× cheaper**, 43.1% fewer input tokens, 62.7% fewer sub-units | 100% → 100%, non-inferiority **PASS** |
+| Live proxy, one bloated turn — **OpenAI gpt-4o-mini** | **1,672 → 730** billed input tokens (**56.3% fewer**) | output correct, fact-guard held |
+| Compression lever — **OpenAI gpt-4o-mini** | **966 → 305** (**68% fewer**) | correct |
+| Document retrieval — **OpenAI gpt-4o-mini** | **1,374 → 318** (**77% fewer**) | correct |
+| Cascade — **OpenAI gpt-4o-mini** | **89%** of steps answered locally ($0 to the API) | **100%** accuracy, 0 false-accepts |
+| Live proxy, compression + cache — **Anthropic claude-haiku-4.5** | **1,198 → 477** billed input tokens (**60% fewer**) | correct |
+
+Honest caveats, stated plainly: the suites are small, the multi-lever suite is a
+*favorable* workload, it's one model per provider, and the live-proxy rows each
+isolate a single lever. These are directional — but they are **real billed tokens
+on real models through the actual proxy**, which is the bar that matters. Reproduce
+them with your own key via `RUN.md` (`validate/live_openai.py`, `validate/live_anthropic.py`).
+
 ## What we measured and learned (the honest findings)
 
 - A **cache-enabled baseline** neutralizes the caching lever — the real

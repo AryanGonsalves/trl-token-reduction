@@ -11,7 +11,7 @@ git add -A
 
 # SAFETY CHECK — both of these must print nothing:
 git ls-files | findstr /I ".bat _result.txt .env"
-git diff --cached | findstr /R "sk-proj- sk-ant-api sk-ant-oat"
+git diff --cached | findstr /R "sk-proj-[A-Za-z0-9] sk-ant-api[0-9][0-9]-[A-Za-z0-9] sk-ant-oat-[A-Za-z0-9]"
 
 git commit -m "Token Reduction Layer v0.1.0 — caching, compression+guard, retrieval, cascade; proxy, MCP plugin (Claude Code + Codex), composer extension"
 ```

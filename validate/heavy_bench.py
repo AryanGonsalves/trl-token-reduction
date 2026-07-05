@@ -45,6 +45,10 @@ PRICES = {  # USD per 1M tokens
 COST_CAP_USD = 1.80      # per provider; hard stop
 MAX_OUTPUT_TOK = 300     # max_tokens on every call
 MAX_INPUT_TOK = 12000    # never send a request whose input exceeds this
+# We count input with tiktoken; OpenAI bills the same, but Anthropic's tokenizer
+# counts ~1.6x more. Inflate Anthropic's worst-case so the cap can never
+# underestimate real spend (OpenAI stays 1.0).
+_TOK_FACTOR = {"openai": 1.0, "anthropic": 1.6}
 
 DEFAULT_MODEL = {"openai": "gpt-5.5", "anthropic": "claude-opus-4-8"}
 
@@ -64,7 +68,8 @@ class Budget:
 
     def worst_case_call_cost(self):
         p = self.prices
-        return (MAX_INPUT_TOK * p["in"] + MAX_OUTPUT_TOK * p["out"]) / 1e6
+        f = _TOK_FACTOR.get(self.provider, 1.6)
+        return (MAX_INPUT_TOK * f * p["in"] + MAX_OUTPUT_TOK * p["out"]) / 1e6
 
     def can_afford_next_call(self):
         return self.spent + self.worst_case_call_cost() <= self.cap

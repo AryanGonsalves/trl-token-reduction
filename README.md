@@ -57,6 +57,20 @@ and code, ~6–10k tokens each), baseline vs token-reduced:
 both. (Reproduce: `validate/heavy_bench.py`, hard-capped at $1.80/provider.) The three
 tasks are a long-document QA, a bloated agent turn, and a code-context QA.
 
+**Cross-file, multi-file codebase (the "does it hold on a bigger codebase?" test).**
+Three questions that each require tracing across 2–3 files, answered from the *whole*
+codebase (~30k tokens) vs the retrieval-reduced context, same non-inferiority test:
+
+| Cross-file codebase QA (~30k-token repo) | Input tokens | Quality |
+|------------------------------------------|--------------|---------|
+| **OpenAI GPT-5.5** | **89,845 → 3,891 (95.7% fewer)** | **3/3 → 3/3, non-inferior PASS** |
+| **Anthropic Claude Opus 4.8** | **141,628 → 6,102 (95.7% fewer)** | **3/3 → 3/3, non-inferior PASS** |
+
+On a real multi-file codebase, the retrieval-reduced context answered the cross-file
+tracing tasks as well as the full context. Honest scope: this is a ~30k-token repo —
+*medium* scale, not a 500k-line monorepo, and n=3 tasks. (Reproduce:
+`validate/bigcode_bench.py`, hard-capped at $1.80/provider.)
+
 | Earlier single-lever / mid-tier runs | Reduction | Quality / correctness |
 |----------------|-----------|-----------------------|
 | Realistic verifier suite — **OpenAI**, safe mode | **2.59× cheaper**, 43.1% fewer input tokens, 62.7% fewer sub-units | 100% → 100%, non-inferiority **PASS** |

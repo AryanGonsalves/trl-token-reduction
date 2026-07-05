@@ -39,3 +39,9 @@ extension/*.zip
 
 # internal handoff/strategy doc — keep local, do not publish
 CONTEXT.md
+
+# launch marketing drafts (keep out of the public repo)
+reddit_launch_posts.md
+
+# internal operating notes (personal/strategy) — keep local
+CLAUDE.md

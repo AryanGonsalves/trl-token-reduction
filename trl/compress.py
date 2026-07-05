@@ -37,7 +37,11 @@ def compress_request(messages, mode, local_model):
     # Guard: never expand.
     if not new_blob or len(new_blob) >= len(combined):
         new_blob = heuristic_compress(combined)
-        if len(new_blob) >= len(combined):
+        # If the heuristic can't shrink it, OR would blank the message entirely
+        # (e.g. the whole tail is boilerplate), decline to compress and keep the
+        # original messages. Never fold a run of messages into empty content --
+        # LocalModel.summarize's contract is "never blank out".
+        if not new_blob.strip() or len(new_blob) >= len(combined):
             return messages, {"messages_compressed": 0}
 
     # Replace the run of compressible messages with one compressed message,
@@ -72,7 +76,9 @@ def _preserve_facts(original: str, compressed: str) -> str:
                 reinjected.append(key)
     if not reinjected:
         return compressed
-    return compressed + "\n" + "\n".join(reinjected)
+    tail = "\n".join(reinjected)
+    # Avoid a leading blank line when the compressed side was empty.
+    return compressed + "\n" + tail if compressed else tail
 
 
 def _aggressive(text: str) -> str:

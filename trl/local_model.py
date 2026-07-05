@@ -36,6 +36,13 @@ class LocalModel:
         Guards: never expand, never blank out. If the local model errors or
         returns something longer/empty, fall back to the safe heuristic so a bad
         preprocessor can never make the payload worse."""
+        out = self._summarize(text, instruction)
+        # Contract: never blank out. If compression nuked everything (e.g. the
+        # input was entirely boilerplate, so heuristic_compress returned ""),
+        # keep the original text rather than hand back an empty payload.
+        return out if out.strip() else text
+
+    def _summarize(self, text: str, instruction: str) -> str:
         if self.provider == "mock":
             return smart_compress(text)
         if self.provider == "openai":
@@ -107,7 +114,7 @@ def heuristic_compress(text: str) -> str:
 
 
 _BOILERPLATE = (
-    "at ", "DEBUG", "TRACE", "INFO:", "  File \"", "Traceback (most recent",
+    "at ", "DEBUG", "TRACE", "INFO:", "File \"", "Traceback (most recent",
 )
 
 

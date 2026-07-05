@@ -26,12 +26,16 @@ def count_tokens(text: str) -> int:
 
 # --- config ----------------------------------------------------------------
 def load_config(path: str = "config.yaml") -> dict:
+    # A missing config file is not an error: callers expect sane defaults, so
+    # return {} rather than raising FileNotFoundError.
+    if not os.path.exists(path):
+        return {}
     try:
         import yaml
         with open(path, encoding="utf-8") as f:
             return yaml.safe_load(f) or {}   # empty file -> {} not None
     except ImportError:
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             return _tiny_yaml(f.read())
 
 
@@ -41,7 +45,7 @@ def _tiny_yaml(text: str) -> dict:
     root: dict = {}
     stack = [(-1, root)]
     for raw in text.splitlines():
-        line = raw.split("#", 1)[0].rstrip()
+        line = _strip_comment(raw).rstrip()
         if not line.strip():
             continue
         indent = len(line) - len(line.lstrip())
@@ -59,7 +63,21 @@ def _tiny_yaml(text: str) -> dict:
     return root
 
 
+def _strip_comment(s: str) -> str:
+    """Strip a YAML end-of-line comment. Per YAML, a '#' only begins a comment at
+    the start of the line or when preceded by whitespace -- so a '#' inside a
+    value (e.g. a URL fragment) is kept, not treated as a comment."""
+    for i, ch in enumerate(s):
+        if ch == "#" and (i == 0 or s[i - 1].isspace()):
+            return s[:i]
+    return s
+
+
 def _scalar(v: str):
+    if v == "[]":            # empty inline list, matches yaml.safe_load
+        return []
+    if v == "{}":            # empty inline map
+        return {}
     if v.lower() in ("true", "false"):
         return v.lower() == "true"
     if re.fullmatch(r"-?\d+", v):

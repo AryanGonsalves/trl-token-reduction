@@ -139,10 +139,13 @@ Or from source: `git clone … && pip install -e ".[all]"`. Installing exposes t
 commands — `trl-proxy`, `trl-retrieve`, `trl-cli` — used below. Extras are modular:
 `[retrieval]`, `[proxy]`, `[models]`, `[mcp]`, `[embed]`, `[pdf]`.
 
-**Who benefits (be honest):** anyone paying **metered API** per token, and anyone on a
-**token-metered subscription** — Claude Code and (since Apr 2026) Codex, whose caps
-shrink as you send fewer tokens. It does **not** discount the ChatGPT/Claude *chat
-websites* (closed endpoints; ChatGPT's cap is per-message, not per-token).
+**Who benefits (be honest):** anyone paying **metered API** per token (pay-as-you-go),
+and anyone on a **token-metered subscription** — Claude Code (a flat monthly fee, but
+usage is *metered in tokens* against your weekly caps) and Codex (which OpenAI moved to
+token-based pricing in Apr 2026). On a subscription this doesn't cut a bill — it makes
+you burn your quota slower, so you hit the weekly/5-hour caps later (more work per plan).
+It does **not** help the ChatGPT/Claude *chat websites* (closed endpoints; ChatGPT's cap
+is per-message, not per-token).
 
 ## How you use it
 

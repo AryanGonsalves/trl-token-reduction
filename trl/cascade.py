@@ -26,6 +26,9 @@ def cascade(query: str, context: str,
     """local_answer -> (answer, confident). If confident, keep it (no big call);
     else escalate to big_answer (one big-model call)."""
     ans, confident = local_answer(query, context)
-    if confident and ans is not None:
+    # Reject empty/blank answers even when the local pipeline claims confidence:
+    # a blank is almost always a local-extraction failure, and accepting it is a
+    # false-accept (the one way cascade can silently hurt quality). Escalate.
+    if confident and ans is not None and ans.strip():
         return CascadeResult(ans, "local", False)
     return CascadeResult(big_answer(query, context), "big", True)

@@ -47,3 +47,8 @@ reddit_launch_posts.md
 CLAUDE.md
 
 NEW_CHAT_CONTEXT.md
+.trl/
+
+# internal planning/optimization docs (reference personal machine/decisions) — keep local
+PLUGIN_DESIGN.md
+OPTIMIZATIONS.md

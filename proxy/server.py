@@ -48,8 +48,9 @@ _ENGINE = Engine(_CFG)
 _UPSTREAM = os.environ.get("TRL_UPSTREAM", "https://api.openai.com")
 
 
-_CORS = {
-    "Access-Control-Allow-Origin": "*",
+_MAX_BODY = 10 * 1024 * 1024        # 10 MB request-body cap (reject before read)
+_ALLOWED_ORIGINS = {"https://claude.ai"}
+_CORS_BASE = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Private-Network": "true",
@@ -57,17 +58,30 @@ _CORS = {
 
 
 class Handler(BaseHTTPRequestHandler):
+    def _cors(self):
+        # Scope CORS: the browser extension's origin is chrome-extension://<id>
+        # (random per install, so allow the scheme) plus claude.ai. Arbitrary
+        # websites get NO Access-Control-Allow-Origin, so a browser refuses to let
+        # them read responses from the local proxy. Non-browser SDK clients ignore
+        # CORS entirely, so this doesn't affect the base_url-swap proxy usage.
+        h = dict(_CORS_BASE)
+        origin = self.headers.get("Origin", "")
+        if origin.startswith("chrome-extension://") or origin in _ALLOWED_ORIGINS:
+            h["Access-Control-Allow-Origin"] = origin
+            h["Vary"] = "Origin"
+        return h
+
     def do_OPTIONS(self):
-        self._send(204, b"", dict(_CORS))
+        self._send(204, b"", self._cors())
 
     def do_GET(self):
         # Lightweight liveness probe so clients (e.g. the browser extension) can
         # tell "engine running" from "engine down" and show a useful message.
         if self.path.rstrip("/").endswith("/health"):
             return self._send(200, b'{"status":"ok","service":"trl-proxy"}',
-                              {"Content-Type": "application/json", **_CORS})
+                              {"Content-Type": "application/json", **self._cors()})
         return self._send(404, b'{"error":"not found"}',
-                          {"Content-Type": "application/json", **_CORS})
+                          {"Content-Type": "application/json", **self._cors()})
 
     def _send(self, code, body: bytes, headers=None):
         self.send_response(code)
@@ -81,16 +95,19 @@ class Handler(BaseHTTPRequestHandler):
             n = int(self.headers.get("Content-Length") or 0)
         except (TypeError, ValueError):
             return self._send(411, b'{"error":"missing or invalid Content-Length"}',
-                              {"Content-Type": "application/json", **_CORS})
+                              {"Content-Type": "application/json", **self._cors()})
+        if n > _MAX_BODY:                       # reject oversized bodies BEFORE read
+            return self._send(413, b'{"error":"request body too large"}',
+                              {"Content-Type": "application/json", **self._cors()})
         raw = self.rfile.read(n)
         path = self.path.rstrip("/")
         if path.endswith("/compress"):
             try:
                 result = handle_compress(json.loads(raw), _ENGINE)
             except Exception as e:
-                return self._send(400, json.dumps({"error": str(e)}).encode(), dict(_CORS))
+                return self._send(400, json.dumps({"error": str(e)}).encode(), self._cors())
             return self._send(200, json.dumps(result).encode(),
-                              {"Content-Type": "application/json", **_CORS})
+                              {"Content-Type": "application/json", **self._cors()})
         is_anthropic = path.endswith("/messages")
         is_openai = path.endswith("/chat/completions")
         if not (is_anthropic or is_openai):

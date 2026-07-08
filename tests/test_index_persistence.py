@@ -22,3 +22,16 @@ def test_incremental_and_roundtrip():
 if __name__ == "__main__":
     test_incremental_and_roundtrip()
     print("INDEX PERSISTENCE TEST PASSED")
+
+
+def test_load_index_has_stats_parity():
+    # FIX: load_index used to drop _stats; callers reading index["_stats"] after a
+    # round-trip would KeyError. Now it is present (all symbols "reused").
+    import tempfile, os as _os
+    from trl.retrieval.ast_index import build_index, save_index, load_index
+    d = tempfile.mkdtemp()
+    open(_os.path.join(d, "m.py"), "w").write("def f():\n    return g()\n")
+    sp = _os.path.join(d, "idx.json")
+    save_index(build_index(d), sp)
+    li = load_index(sp)
+    assert "_stats" in li and li["_stats"]["reused"] == len(li["symbols"])

@@ -48,6 +48,20 @@ def test_heuristic_drops_blank_lines_and_never_expands():
     assert len(out) <= len(text)
 
 
+def test_is_boilerplate_prose_at_kept():
+    # FIXED (P2): a bare "at " prefix no longer flags ordinary prose; only real
+    # stack-frame shapes match (trl/local_model.py:_is_boilerplate).
+    assert not _is_boilerplate("at the meeting we decided to ship")
+    assert not _is_boilerplate("at least three users reported this")
+    assert _is_boilerplate("at com.example.Foo.bar(Foo.java:42)")
+    assert _is_boilerplate("at java.lang.Thread.run")
+
+
+def test_heuristic_keeps_prose_starting_with_at():
+    text = "at the standup we agreed on the plan\nreal second line"
+    assert heuristic_compress(text) == text
+
+
 def test_is_boilerplate_prefixes():
     assert _is_boilerplate("DEBUG x")
     assert _is_boilerplate("at foo.bar(Baz.java:1)")

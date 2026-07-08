@@ -1,8 +1,9 @@
 # TRL — Improvements Backlog
 
 Living doc from the Phase-2 quality pass (offline audit + test-driven bug fixing).
-Test baseline: **129 passing** (`python -m pytest tests/`). The 128 from Phase 1
-plus one new `test_whitespace_only_confident_escalates`.
+Test baseline: **139 passing** (`python -m pytest tests/`). The 128 from Phase 1
+plus new tests: `test_whitespace_only_confident_escalates`,
+`test_only_history_compressed`, `test_only_tool_outputs_compressed`.
 
 ---
 
@@ -52,63 +53,62 @@ asserted the buggy behavior were flipped to assert the corrected behavior.
 Plus one cosmetic fix folded in: `_preserve_facts("val 42", "")` no longer
 prepends a blank line (`test_preserve_into_empty_compressed`).
 
+8. **engine — `compress_history` / `compress_tool_outputs` now act independently**
+   (`trl/engine.py`, `trl/compress.py`). Was P1 below. The engine now derives the
+   set of eligible message kinds from the two flags and passes it to
+   `compress_request(..., kinds=...)` (new optional, backward-compatible param
+   defaulting to all `COMPRESSIBLE_KINDS`). Setting `compress_history: false` now
+   leaves history untouched while still compressing tool outputs, and vice versa.
+   Tests: `test_only_history_compressed`, `test_only_tool_outputs_compressed`.
+
 ---
 
-## Newly found — prioritized (not yet changed; awaiting sign-off)
+## Fixed in follow-up pass (P2 + P3)
 
-These came out of the audit. None break tests today; several are behavior changes
-worth a decision before touching, per the "don't break public API / check in"
-guardrail.
+Done and covered by new tests. Note the one caveat at the end.
 
-### P1 — config lever silently does nothing
+### P2
 
-- **`compress_history` / `compress_tool_outputs` flags are not selectively wired**
-  (`trl/engine.py`). The engine reads both flags but only uses them as
-  `if self.compress_history or self.compress_tool_outputs:` to decide whether to
-  call `compress_request` at all. `compress_request` then compresses BOTH
-  `HISTORY` and `TOOL_RESULT` unconditionally. Setting `compress_history: false`
-  while keeping tool-output compression on has no effect — history is still
-  compressed. Fix: pass the enabled kinds into `compress_request` and filter on
-  them, or split into two calls. Needs a test asserting each flag independently.
+- **`meta["local_model_used"]` now accurate + provider surfaced** (`trl/engine.py`,
+  `trl/local_model.py`). Added `LocalModel.model_backed()`: True for the mock
+  stand-in, a configured OpenAI compressor, or a reachable Ollama; False for
+  provider `none`. Engine reports it plus `meta["local_model_provider"]`.
+  Tests: `test_local_model_used_true_for_mock`, `test_local_model_used_false_for_none`.
 
-### P2 — quality / accounting correctness
+- **`_is_boilerplate` "at " over-match tightened** (`trl/local_model.py`). Replaced
+  the bare `"at "` prefix with a `_STACK_FRAME` regex that matches real java/python
+  frames (`at a.b.C(...)`, `at java.lang.Thread.run`) but leaves prose ("at the
+  meeting we decided X") alone. Tests: `test_is_boilerplate_prose_at_kept`,
+  `test_heuristic_keeps_prose_starting_with_at`.
 
-- **`meta["local_model_used"]` is wrong for the mock provider** (`trl/engine.py`).
-  It reports `self.local.available()`, which is only True for `provider == "ollama"`.
-  With `provider == "mock"` the `smart_compress` stand-in DOES run, but meta says
-  the local model wasn't used — misleading for accounting/debugging. Report which
-  path actually ran instead.
+- **Rerank relevance cutoff added** (`trl/retrieval/retrieve.py`). Inclusion now
+  carries an `admissible` flag: keyword hits (`score > 0`) always qualify; in
+  rerank mode a symbol can also qualify on raw cosine `>= min_similarity` (new
+  trailing param, default `0.10`). An unrelated query no longer fills `k` slots
+  with near-orthogonal noise. Keyword-only behavior is unchanged. Tests:
+  `test_rerank_rejects_unrelated_query`, `test_min_similarity_threshold_tunable`
+  (and the existing `test_rerank` still passes — zero-keyword semantic matches
+  still surface).
+  **Caveat:** `min_similarity=0.10` is a conservative default chosen offline. It
+  only rejects near-orthogonal picks and never filters keyword hits, but the exact
+  value should be validated against a REAL embedder (bigcode_bench with rerank)
+  before trusting it for recall — unlike the pure correctness fixes, this one
+  touches retrieval quality.
 
-- **`_is_boilerplate` "at " prefix over-matches prose** (`trl/local_model.py`).
-  The `"at "` marker strips any stripped line starting with "at " — including real
-  content like "at the meeting we decided X". In `heuristic_compress` this can drop
-  load-bearing lines. Tighten the marker (e.g. require the stack-frame shape
-  `at <ident>(...)`), or scope it to lines that also look like a trace.
+### P3
 
-- **Rerank mode never applies the `sc <= 0` relevance cutoff** (`trl/retrieval/retrieve.py`).
-  Keyword-only mode stops adding symbols once score `<= 0`. In rerank mode the loop
-  tests the *blended* score `sc/kw_max + 0.6*cos01`, which is always `> 0` (the
-  embedding term is non-negative), so up to `k` symbols are pulled in even when
-  nothing keyword-matches — noise for vague/irrelevant queries. Consider gating
-  expansion/inclusion on the underlying keyword score, or a blended-score floor.
+- **First-slice-over-budget documented** (`trl/retrieval/retrieve.py`). Added a
+  comment at the budget loop explaining the top slice is always emitted (never
+  return empty context), so `tokens` can exceed `token_budget` by that one slice.
+  Behavior unchanged (already asserted by `test_token_budget_respected`).
 
-### P3 — minor / cosmetic / reporting
+- **Folded message preserves `key_facts`** (`trl/compress.py`). `compress_request`
+  now unions `key_facts` from every folded message (dedup, order-stable) instead
+  of dropping them. Test: `test_folded_message_preserves_key_facts`.
 
-- **First picked symbol can exceed `token_budget`** (`trl/retrieval/retrieve.py`).
-  The budget check is `if used + t > token_budget and chosen:` — the first symbol
-  is always added, so one huge symbol silently blows the budget. Intentional
-  ("always return something"), but undocumented; consider a hard cap or a note.
-
-- **Folded compressed message drops `key_facts` and blends kinds** (`trl/compress.py`).
-  `compress_request` builds `Message(keep.role, keep.kind, new_blob, [])` — it
-  discards `key_facts` and reuses the first compressible message's role/kind for a
-  blob that may mix HISTORY and TOOL_RESULT. Low impact (key_facts is eval-only
-  metadata) but `copy_with` exists for exactly this.
-
-- **`tokens_removed` ignores prefix-cache savings** (`trl/engine.py`).
-  `meta["tokens_removed"]` is compression-only (before/after content tokens). When
-  caching is the dominant lever, reported savings understate the real win. Consider
-  a separate `cache_prefix_tokens` line in the savings summary.
+- **`cache_prefix_tokens` surfaced in meta** (`trl/engine.py`). Added
+  `meta["cache_prefix_tokens"]` so the caching saving is visible alongside
+  compression's `tokens_removed`. Test: `test_cache_prefix_tokens_in_meta`.
 
 ---
 
@@ -120,6 +120,8 @@ guardrail.
   tree_sitter_c_sharp pathspec pyyaml` then `python -m pytest tests/`.
   Without the tree-sitter grammars, the retrieval/AST tests fail on missing
   deps (not real regressions).
-- No public API touched: `retrieve`/`build_index` signatures, `Engine.process`,
+- Public API backward-compatible: `retrieve` gained a trailing
+  `min_similarity=0.10` kwarg (all existing positional/keyword callers unaffected);
+  `compress_request` gained a trailing `kinds=` kwarg. `build_index` signature, `Engine.process`,
   `/compress` + proxy shapes, and the `trl-proxy`/`trl-retrieve`/`trl-cli`
   entry points are unchanged.

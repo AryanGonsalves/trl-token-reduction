@@ -25,7 +25,12 @@ def cascade(query: str, context: str,
             big_answer: Callable[[str, str], str]) -> CascadeResult:
     """local_answer -> (answer, confident). If confident, keep it (no big call);
     else escalate to big_answer (one big-model call)."""
-    ans, confident = local_answer(query, context)
+    try:
+        ans, confident = local_answer(query, context)
+    except Exception:
+        # Local pipeline unreachable / raised mid-call -> FAIL SAFE to the frontier
+        # model rather than propagate. Never let a local failure break the request.
+        ans, confident = None, False
     # Reject empty/blank answers even when the local pipeline claims confidence:
     # a blank is almost always a local-extraction failure, and accepting it is a
     # false-accept (the one way cascade can silently hurt quality). Escalate.

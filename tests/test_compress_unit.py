@@ -152,6 +152,81 @@ def test_all_boilerplate_keeps_message_nonblank():
     assert out[0].content == blob          # unchanged, never blanked
 
 
+def test_folded_message_preserves_key_facts():
+    # FIXED (P3): folding preserves key_facts from every folded message,
+    # dedup + order-stable (trl/compress.py:compress_request).
+    m1 = Message("tool", TOOL_RESULT, _long("aaa"), ["order 771"])
+    m2 = Message("tool", TOOL_RESULT, _long("bbb"), ["refund ok", "order 771"])
+    out, stats = compress_request([m1, m2], "safe", LM_NONE)
+    assert stats["messages_compressed"] == 2
+    folded = [m for m in out if m.kind == TOOL_RESULT][0]
+    assert folded.key_facts == ["order 771", "refund ok"]
+
+
+def test_memoized_compression_only_compresses_new_messages():
+    # O2: per-message compression is memoized, so in a growing tail only the NEW
+    # message hits the local model; settled messages are served from cache.
+    import trl.compress as C
+    C._clear_compress_cache()
+    calls = {"n": 0}
+
+    class CountingLM:
+        provider = "mock"; model = "m2v"
+        def available(self):
+            return False
+        def summarize(self, text, instr):
+            calls["n"] += 1
+            from trl.local_model import heuristic_compress
+            return heuristic_compress(text)
+
+    lm = CountingLM()
+    m1 = Message("tool", TOOL_RESULT, _long("alpha"))
+    compress_request([m1], "safe", lm)
+    assert calls["n"] == 1                      # m1 compressed once
+
+    m2 = Message("tool", TOOL_RESULT, _long("beta"))
+    compress_request([m1, m2], "safe", lm)      # m1 cached -> only m2 is new
+    assert calls["n"] == 2
+
+    compress_request([m1, m2], "safe", lm)      # both cached -> no new calls
+    assert calls["n"] == 2
+
+
+def test_memoized_output_matches_uncached():
+    # memoization must be byte-identical to recomputing.
+    import trl.compress as C
+    msgs = [Message("tool", TOOL_RESULT, _long("gamma")),
+            Message("assistant", HISTORY, _long("delta") + "\ninvoice 3345")]
+    C._clear_compress_cache()
+    out_cold, _ = compress_request(msgs, "safe", LM_NONE)
+    out_warm, _ = compress_request(msgs, "safe", LM_NONE)   # served from cache
+    assert [m.content for m in out_cold] == [m.content for m in out_warm]
+    assert "3345" in "\n".join(m.content for m in out_warm)
+
+
+class _VerboseLM:
+    # a real-model-style compressor that returns a LONGER paraphrase, forcing the
+    # never-expand fallback path in compress_request.
+    provider = "openai"; model = "gpt-x"
+    def available(self):
+        return False
+    def summarize(self, text, instr):
+        return text + "\n" + "\n".join("narrative padding line" for _ in range(40))
+
+
+def test_fact_guard_holds_on_neverexpand_fallback():
+    # SEC/correctness: safe mode must not drop a number even when the verbose
+    # compressor trips the fallback to heuristic_compress (which has no guard).
+    import trl.compress as C
+    C._clear_compress_cache()
+    content = "DEBUG audit balance 987654\n" + "\n".join(
+        f"unique reasoning line {i}" for i in range(15))
+    out, stats = compress_request([Message("tool", TOOL_RESULT, content)],
+                                  "safe", _VerboseLM())
+    blob = "\n".join(m.content for m in out)
+    assert "987654" in blob, "fact guard bypassed on the never-expand fallback"
+
+
 if __name__ == "__main__":
     test_preserve_decimal_number()
     test_preserve_comma_number()
@@ -170,4 +245,6 @@ if __name__ == "__main__":
     test_aggressive_no_fact_guard()
     test_mock_mode_keeps_factish_lines()
     test_all_boilerplate_keeps_message_nonblank()
+    test_memoized_compression_only_compresses_new_messages()
+    test_memoized_output_matches_uncached()
     print("ALL COMPRESS UNIT TESTS PASSED")

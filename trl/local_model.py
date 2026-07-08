@@ -31,6 +31,15 @@ class LocalModel:
         except Exception:
             return False
 
+    def model_backed(self) -> bool:
+        """True when a model-backed compressor (not just the deterministic
+        heuristic) will actually run: the mock stand-in, a configured OpenAI
+        compressor, or a reachable Ollama. `available()` alone is wrong for
+        accounting because it only ever reports the ollama case."""
+        if self.provider in ("mock", "openai"):
+            return True
+        return self.available()   # ollama, only when the endpoint answers
+
     def summarize(self, text: str, instruction: str) -> str:
         """Return a compressed version of `text` following `instruction`.
         Guards: never expand, never blank out. If the local model errors or
@@ -79,6 +88,19 @@ class LocalModel:
             temperature=0, max_tokens=600)
         return (r.choices[0].message.content or "").strip()
 
+    def ask(self, prompt: str, num_predict: int = 64) -> str:
+        """Raw single-turn completion from the local (ollama) model, $0. Used by the
+        optional LLM-rerank. Raises on any transport error so callers fail safe."""
+        body = json.dumps({
+            "model": self.model, "prompt": prompt, "stream": False,
+            "options": {"temperature": 0, "num_predict": num_predict},
+        }).encode()
+        req = urllib.request.Request(
+            self.endpoint + "/api/generate", data=body,
+            headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.loads(r.read())["response"]
+
     def _ollama(self, text: str, instruction: str) -> str:
         prompt = (
             f"{instruction}\n\nRemove redundancy and irrelevance. NEVER drop "
@@ -114,12 +136,17 @@ def heuristic_compress(text: str) -> str:
 
 
 _BOILERPLATE = (
-    "at ", "DEBUG", "TRACE", "INFO:", "File \"", "Traceback (most recent",
+    "DEBUG", "TRACE", "INFO:", "File \"", "Traceback (most recent",
 )
+
+# A stack-frame line: `at <dotted.qualified.name>` or `at name(...)`. This is
+# deliberately narrower than a bare "at " prefix, which also matches ordinary
+# prose ("at the meeting we decided ...") and would drop real content.
+_STACK_FRAME = re.compile(r"^at\s+[\w$]+(?:\.[\w$]+)+|^at\s+[\w$]+\(")
 
 
 def _is_boilerplate(s: str) -> bool:
-    return s.startswith(_BOILERPLATE)
+    return s.startswith(_BOILERPLATE) or _STACK_FRAME.match(s) is not None
 
 
 _FACTISH = re.compile(r"KEYFACT|\$|order|account|prior-decision|STATUS|\d")

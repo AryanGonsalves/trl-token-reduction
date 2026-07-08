@@ -24,3 +24,12 @@ if __name__ == "__main__":
     test_chunk_and_find()
     test_text_retrieval()
     print("TEXT RETRIEVAL TESTS PASSED")
+
+
+def test_retrieve_text_empty_query_returns_nothing():
+    # FIX: an empty/whitespace question used to return an arbitrary first chunk;
+    # now it returns nothing, matching code retrieve() semantics.
+    from trl.retrieval.text_index import build_text_index, retrieve_text
+    idx = build_text_index({"doc": "alpha para one.\n\nbeta para two.\n\ngamma three."})
+    r = retrieve_text(idx, "   ", rerank=False)
+    assert r["chunks"] == [] and r["context"] == "" and r["tokens"] == 0

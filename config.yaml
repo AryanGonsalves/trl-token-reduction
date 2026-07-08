@@ -39,6 +39,16 @@ local_model:
   # net-savings number is honest rather than gross.
   notional_cost_per_mtok: 0.05
 
+# Optional LOCAL LLM-rerank (opt-in via retrieve(rerank="local")). Uses ollama at
+# $0. Defaults below; override with env TRL_RERANK_MODEL / TRL_RERANK_ENDPOINT.
+rerank:
+  # Hosted rerank (Anthropic, uses YOUR ANTHROPIC_API_KEY). OFF by default;
+  # enable per-call via retrieve(rerank="hosted"). Single source of truth for the model.
+  model: claude-haiku-4-5-20251001
+  # Local rerank (ollama, $0) for retrieve(rerank="local").
+  local_model: llama3.2:3b
+  endpoint: http://localhost:11434
+
 arms:
   baseline:
     # HONEST baseline MUST use native prompt caching, or you credit your layer

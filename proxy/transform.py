@@ -131,6 +131,23 @@ def _to_text(content):
     return None
 
 
+def _mark_last_settled(messages: List[Dict]) -> None:
+    """O1: add a second Anthropic cache_control breakpoint on the last SETTLED
+    message -- the one just before the live user turn. Anthropic caches the longest
+    matching prefix, so marking here caches the whole repeated transcript prefix,
+    not just the system header. Converts that message's string content to block
+    form (required to carry cache_control); complex content is left untouched."""
+    live = max((i for i, m in enumerate(messages)
+                if m.get("role") == "user"), default=-1)
+    end = live - 1
+    if end < 0:
+        return
+    c = messages[end].get("content")
+    if isinstance(c, str):
+        messages[end]["content"] = [{"type": "text", "text": c,
+                                     "cache_control": {"type": "ephemeral"}}]
+
+
 def transform_anthropic_request(req: Dict, engine: Engine) -> Tuple[Dict, Dict]:
     """Compress prior turns + inject cache_control on the stable system prefix
     (the caching lever, explicit for Anthropic). The live (last user) turn and any
@@ -194,8 +211,10 @@ def transform_anthropic_request(req: Dict, engine: Engine) -> Tuple[Dict, Dict]:
     after = count_tokens(new_system_text) + sum(count_tokens(nm.get("content", ""))
                                                 for nm in new_messages
                                                 if isinstance(nm.get("content"), str))
+    _mark_last_settled(new_messages)   # O1: second breakpoint (after accounting)
     new_req = {**req, "system": new_system, "messages": new_messages}
     meta = {"tokens_before": before, "tokens_after": after,
             "tokens_saved": max(before - after, 0),
-            "cache_prefix_tokens": res.cache_prefix_tokens}
+            "cache_prefix_tokens": res.cache_prefix_tokens,
+            "cache_settled_tokens": res.meta.get("cache_settled_tokens", 0)}
     return new_req, meta

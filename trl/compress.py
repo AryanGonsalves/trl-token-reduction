@@ -9,7 +9,9 @@ Perf: we compress the ENTIRE compressible tail in ONE local-model call per
 request (not one call per message). With a slow local model this is ~Nx fewer
 calls and the difference between a run finishing in a minute vs hanging.
 """
+import hashlib
 import re
+from collections import OrderedDict
 
 from .message import Message, COMPRESSIBLE_KINDS
 from .local_model import heuristic_compress
@@ -20,23 +22,65 @@ _INSTR = ("Compress the following tool outputs and conversation history for "
           "re-use as context.")
 
 
-def compress_request(messages, mode, local_model):
+# O2: memoize per-message compression. In an agent loop the settled tail is
+# byte-identical step to step, so only the NEW message actually hits the (slow/
+# paid) local model -- the rest are served from cache. Output is identical to
+# recomputing; this is pure memoization, quality-neutral.
+_COMPRESS_CACHE: "OrderedDict[tuple, str]" = OrderedDict()
+_CACHE_MAX = 512
+
+
+def _clear_compress_cache():
+    _COMPRESS_CACHE.clear()
+
+
+def _compress_one(content: str, mode: str, local_model) -> str:
+    """Compress ONE message's content, memoized by (content, mode, provider,
+    model). The fact guard runs per message in safe mode; aggressive stays lossy."""
+    key = (hashlib.sha256(content.encode("utf-8")).hexdigest(), mode,
+           getattr(local_model, "provider", ""), getattr(local_model, "model", ""))
+    cached = _COMPRESS_CACHE.get(key)
+    if cached is not None:
+        _COMPRESS_CACHE.move_to_end(key)
+        return cached
+    if mode == "aggressive":
+        out = _aggressive(content)
+    else:
+        out = local_model.summarize(content, _INSTR)
+        out = _preserve_facts(content, out)   # exact fact safety net, per message
+    _COMPRESS_CACHE[key] = out
+    if len(_COMPRESS_CACHE) > _CACHE_MAX:
+        _COMPRESS_CACHE.popitem(last=False)
+    return out
+
+
+def compress_request(messages, mode, local_model, kinds=COMPRESSIBLE_KINDS):
     """Return (new_messages, stats). Collapses the whole compressible tail into a
-    single compressed message via ONE local-model call."""
+    single compressed message via ONE local-model call. `kinds` selects WHICH
+    message kinds are eligible (defaults to all COMPRESSIBLE_KINDS); the engine
+    narrows it so the compress_history / compress_tool_outputs flags act
+    independently."""
     compressible = [m for m in messages
-                    if m.kind in COMPRESSIBLE_KINDS and len(m.content) > 200]
+                    if m.kind in kinds and len(m.content) > 200]
     if not compressible:
         return messages, {"messages_compressed": 0}
 
     combined = "\n\n".join(m.content for m in compressible)
-    if mode == "aggressive":
-        new_blob = _aggressive(combined)
-    else:
-        new_blob = local_model.summarize(combined, _INSTR)
-        new_blob = _preserve_facts(combined, new_blob)   # exact fact safety net
-    # Guard: never expand.
-    if not new_blob or len(new_blob) >= len(combined):
+    # Compress each message independently (memoized) then join. Folding N messages
+    # into one call was the old perf design; per-message memoization is faster in a
+    # loop (only new messages recompute) while producing an equivalent blob.
+    new_blob = "\n\n".join(_compress_one(m.content, mode, local_model)
+                            for m in compressible)
+    # Guard: never expand, never blank.
+    if not new_blob.strip() or len(new_blob) >= len(combined):
         new_blob = heuristic_compress(combined)
+        # FACT-GUARD INVARIANT: heuristic_compress has NO fact guard (it strips
+        # boilerplate-prefixed lines, which can carry numbers). In safe mode the
+        # guard MUST cover this fallback too, or a verbose real-model compressor
+        # that trips the never-expand branch could silently drop a load-bearing
+        # number. Aggressive mode stays intentionally lossy.
+        if mode != "aggressive":
+            new_blob = _preserve_facts(combined, new_blob)
         # If the heuristic can't shrink it, OR would blank the message entirely
         # (e.g. the whole tail is boilerplate), decline to compress and keep the
         # original messages. Never fold a run of messages into empty content --
@@ -48,10 +92,18 @@ def compress_request(messages, mode, local_model):
     # in place (keeps stable prefix and the live user query where they were).
     out, inserted = [], False
     keep = compressible[0]
+    # Preserve key_facts from every folded message (dedup, order-stable). It's
+    # eval-only metadata today, but blanking it silently loses information the
+    # folded blob is meant to carry.
+    folded_facts, _seen = [], set()
+    for m in compressible:
+        for f in m.key_facts:
+            if f not in _seen:
+                _seen.add(f); folded_facts.append(f)
     for m in messages:
-        if m.kind in COMPRESSIBLE_KINDS and len(m.content) > 200:
+        if m.kind in kinds and len(m.content) > 200:
             if not inserted:
-                out.append(Message(keep.role, keep.kind, new_blob, []))
+                out.append(Message(keep.role, keep.kind, new_blob, folded_facts))
                 inserted = True
             # drop the other compressible messages (folded into the blob)
         else:

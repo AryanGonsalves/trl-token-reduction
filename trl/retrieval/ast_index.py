@@ -306,4 +306,6 @@ def load_index(path: str) -> Dict:
     syms = [Symbol(name=x["name"], kind=x["kind"], file=x["file"],
                    start_line=x["start_line"], end_line=x["end_line"],
                    source=x["source"], refs=set(x["refs"])) for x in d["symbols"]]
-    return {"symbols": syms, "files": d["files"]}
+    # parity with build_index so callers can always read index["_stats"]
+    return {"symbols": syms, "files": d["files"],
+            "_stats": {"reparsed": [], "reused": len(syms)}}

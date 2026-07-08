@@ -1,0 +1,11 @@
+{
+  "name": "trl-marketplace",
+  "owner": { "name": "AryanGonsalves", "url": "https://github.com/AryanGonsalves/trl-token-reduction" },
+  "plugins": [
+    {
+      "name": "trl",
+      "source": "./",
+      "description": "Token-efficient code retrieval (retrieval tier: exact slices, not whole files)."
+    }
+  ]
+}

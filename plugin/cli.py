@@ -14,11 +14,11 @@ from trl.util import count_tokens
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("query")
-    ap.add_argument("--repo", default=".")
+    ap.add_argument("--repo", default=None)   # None -> resolve $TRL_REPO/$CLAUDE_PROJECT_DIR/git-root/cwd
     ap.add_argument("--budget", type=int, default=1200)
     ap.add_argument("--k", type=int, default=8)
     a = ap.parse_args()
-    idx = get_index(a.repo)
+    idx = get_index(a.repo)   # index_store resolves + caches at <repo>/.trl/index.json
     r = retrieve(idx, a.query, token_budget=a.budget, k=a.k)
     if not r["symbols"]:
         print("(no relevant symbols found)"); return

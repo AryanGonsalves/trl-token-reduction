@@ -111,13 +111,39 @@ them with your own key via `RUN.md` (`validate/live_openai.py`, `validate/live_a
 ## Architecture
 
 ```
-request ──► retrieve (AST slices, local)     # lever 3: don't stuff whole files
-        ──► cascade  (easy → local, $0)       # lever 4: skip the big model entirely
-        ──► Engine.process:
-              ├─ cache-mark stable prefix      # lever 1
-              └─ compress tail + fact guard    # lever 2
-        ──► big model (only when needed)
+CODEBASE-AWARE surface (library / MCP plugin / agent integration — can see your repo):
+  request ──► retrieve (AST slices, local)     # lever 3: don't stuff whole files
+          ──► cascade  (easy → local, $0)       # lever 4: needs a local model
+          ──► Engine.process:
+                ├─ cache-mark stable prefix      # lever 1
+                └─ compress tail + fact guard    # lever 2
+          ──► big model (only when needed)
+
+BLIND proxy (base_url swap — CANNOT see your repo):
+  request ──► Engine.process: cache-mark prefix + compress tail + fact guard   # levers 1 & 2
+          ──► retrieve ONLY over context you pass in a `documents` field       # lever 3, opt-in
+          ──► big model
+  (cascade and codebase-wide retrieval are NOT available on the blind proxy)
 ```
+
+### Which lever lives on which surface
+
+The headline retrieval numbers (95.7% cross-file, and the ~87% frontier runs) come
+from the RETRIEVAL-heavy code-agent regime, which needs a surface that can **index
+your codebase**. The blind proxy can't see your repo, so on the proxy only caching +
+compression fire automatically. **Never read the 87%/95.7% as a blind-proxy number.**
+
+| Surface | caching (1) | compression + guard (2) | retrieval (3) | cascade (4) |
+|---|---|---|---|---|
+| **Blind proxy** (base_url swap) | ✓ auto | ✓ auto | only over a `documents` field you pass | ✗ |
+| **Library / Engine** (in your agent) | ✓ | ✓ | ✓ indexes your repo | ✓ if local model |
+| **MCP plugin** (Claude Code / Codex) | ✓ | ✓ | ✓ | ✓ if local model |
+| **Browser extension** (`/compress`) | — | ✓ | ✓ (text) | ✗ |
+
+The full-stack ~99% offline reduction over this repo (`validate/integrated_loop.py`)
+is a *codebase-aware* run — retrieval doing most of the work, compression + caching
+stacking on top. The blind proxy delivers the compression + caching portion only
+(the single-lever live-proxy rows above: ~56–68% on a bloated turn).
 
 - `trl/` — the shared engine (caching, compression+guard, cascade router) and
   `trl/retrieval/` (tree-sitter extractor + retriever, **12 languages / 18 file
@@ -154,8 +180,10 @@ Four ways to put it in front of your model — pick by how much you want to chan
 ### 1. Drop-in proxy (any app, zero code changes)
 The proxy speaks both the OpenAI **and** Anthropic wire formats. Point your
 client's `base_url` at it; keep your own key (the proxy never stores it). Every
-request gets the levers applied on the way through, and comes back with an
-`X-TRL-Tokens-Saved` header so you can see the cut per call.
+request gets **caching + compression (+ fact guard)** applied on the way through,
+and comes back with an `X-TRL-Tokens-Saved` header so you can see the cut per call.
+(The blind proxy can't see your codebase, so the retrieval and cascade levers live
+on the codebase-aware surfaces below — see the surface/lever table above.)
 
 ```bash
 trl-proxy                              # listens on :8899, forwards upstream
@@ -189,42 +217,32 @@ Call the pieces from your own code when you control the request path:
 
 ```python
 from trl import Engine
-from trl.util import load_config
-from trl.retrieval import build_index, retrieve
+from trl.util import loa
+## Claude Code plugin (retrieval tier)
 
-eng = Engine(load_config("config.yaml"))   # caching + compression + cascade
-idx = build_index("/path/to/repo")          # incremental; persists + rebuilds on change
-hits = retrieve(idx, "where do we validate tokens?", token_budget=1200)
-# hits["context"] -> just the relevant slices, ready to send
-```
+The repo doubles as a Claude Code plugin **and** its own marketplace — no store, no
+review, just files. Add the marketplace (`AryanGonsalves/trl-token-reduction`) and
+install the `trl` plugin. It ships:
 
-Retrieval is keyword-based and free by default. For vague, non-literal queries
-you can pass an optional `rerank`/LLM-rerank callable — a small paid gain with no
-regressions (see the findings below); it's off unless you turn it on.
+- the `trl-retrieve` **MCP server** (`retrieve_code`, `explain_symbol`) — the agent
+  pulls exact AST slices instead of reading whole files;
+- a **skill** that tells the agent to actually use those tools;
+- `/trl-index` (build/refresh the index) and `/trl-status` (show savings).
 
-### 4. Composer extension (stretch a Claude.ai subscription)
-For the one surface you can't proxy — the Claude.ai chat box — a browser extension
-compresses your *pasted* context before you send it, so you burn fewer tokens against
-your subscription bucket. Manual + preview-first (a "numbers preserved" badge shows
-the fact-guard at work); nothing sends automatically. Run `trl-proxy` for the local
-`/compress` endpoint, load `extension/` unpacked, and click **⚡ Compress** on claude.ai.
-See `extension/README.md`. (Helps token-metered Claude; not ChatGPT's per-message cap.)
+It auto-targets YOUR project at runtime (`$TRL_REPO` / `$CLAUDE_PROJECT_DIR` / nearest `.git` / cwd) and caches the index at `<project>/.trl/index.json`; if it can't resolve the project it asks you to run `/trl-index` or set `TRL_REPO`.
 
-## Reproduce
+**Honest scope:** the plugin delivers the **retrieval tier** — cutting context tokens by
+fetching slices, not whole files. It does **not** deliver the full proxy-path headline
+(~87%); prefix caching + tail compression require running the local proxy and pointing
+your agent's base URL at it (two-tier note above).
 
-```bash
-pip install -r requirements.txt
-python bench/retrieval_bench.py     # retrieval: 5.9× on code-QA, quality-neutral
-python bench/cascade_bench.py       # cascade: 75% fewer big-model calls
-python bench/pipeline_bench.py      # compound: all 4 levers, ~18× on a session
-python -m pytest -q   # or: for t in tests/test_*.py; do python "$t"; done
-```
+### Optional hosted rerank (precision, off by default)
 
-Real API / local-model arms (need a key or Ollama) are wired too — see `RUN.md`.
-
-## Design principles
-
-Cost is per **token**, not per character. You can't get drastic + lossless +
-zero-quality-loss all at once (information theory) — so every lever is judged by a
-**published non-inferiority test**, never the unfalsifiable word "zero." The
-benchmark *is* the product's credibility.
+For vague natural-language questions where keyword retrieval misses the right symbol,
+`retrieve(rerank="hosted")` asks a hosted model (your own `ANTHROPIC_API_KEY`,
+`claude-haiku-4-5-20251001` by default) to reorder the shortlist. Validated on a
+15-query NL set (2 runs): free `doc_boost` **6/15** → Haiku **11/15**, Sonnet
+**8.5/15** (oracle ceiling **12/15**), with the 6/6 code loop non-inferior. It is a
+**precision option, not a token saver** — ~1¢/query via Haiku on your own key — and is
+**off by default**. The remaining 11→12 gap is retrieval-recall/shortlist coverage, not
+the reranker.

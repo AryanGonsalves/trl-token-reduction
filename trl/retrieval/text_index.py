@@ -79,6 +79,8 @@ def retrieve_text(index: Dict, query: str, token_budget: int = 1200, k: int = 6,
                   rerank: bool = True, embedder=None) -> Dict:
     chunks = index["chunks"]
     q = _ttokens(query)
+    if not q:                       # empty/whitespace query -> nothing (parity
+        return {"context": "", "chunks": [], "tokens": 0}   # with code retrieve()
     kw = [(float(_score(c, q)), c) for c in chunks]
     kw_max = max((s for s, _ in kw), default=0.0) or 1.0
 

@@ -46,6 +46,15 @@ def test_whitespace_only_confident_escalates():
     assert r.route == "big" and r.answer == "BIG"
 
 
+def test_local_exception_fails_safe_to_frontier():
+    # FIX: if the local pipeline raises (local model unreachable / errors mid-call),
+    # cascade must escalate to the frontier model, not propagate the exception.
+    def boom(q, c):
+        raise RuntimeError("local model unreachable")
+    r = cascade("q", "", boom, lambda q, c: "BIG")
+    assert r.route == "big" and r.used_big and r.answer == "BIG"
+
+
 def test_query_and_context_forwarded():
     seen = {}
     def local(q, c):

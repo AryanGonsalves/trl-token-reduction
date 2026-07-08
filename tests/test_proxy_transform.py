@@ -42,8 +42,17 @@ def test_anthropic_shape():
     nr, meta = transform_anthropic_request(req, eng)
     assert meta["tokens_after"] < meta["tokens_before"]
     assert isinstance(nr["system"], list) and nr["system"][0]["cache_control"] == {"type": "ephemeral"}
-    blob = nr["system"][0]["text"] + "\n" + "\n".join(m["content"] for m in nr["messages"])
+
+    def _text(c):
+        return c if isinstance(c, str) else "\n".join(b.get("text", "") for b in c)
+
+    blob = nr["system"][0]["text"] + "\n" + "\n".join(_text(m["content"]) for m in nr["messages"])
     assert "5566" in blob and nr["messages"][-1]["content"].startswith("What is amount_usd")
+    # O1: a SECOND cache breakpoint on the last settled message (before live turn)
+    bps = [m for m in nr["messages"] if isinstance(m["content"], list)
+           and any(b.get("cache_control") for b in m["content"])]
+    assert len(bps) == 1, "expected a settled-history cache breakpoint"
+    assert isinstance(nr["messages"][-1]["content"], str), "live turn must stay unmarked"
     print(f"anthropic transform OK: {meta['tokens_before']}->{meta['tokens_after']} tok, "
           f"cache_control + fact + query preserved")
 

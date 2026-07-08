@@ -2,7 +2,7 @@
 Run: python tests/test_cache_stable_prefix.py"""
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from trl.cache import stable_prefix
+from trl.cache import stable_prefix, cacheable_prefix
 from trl.message import (Message, SYSTEM, TOOL_SCHEMA, HISTORY, TOOL_RESULT,
                          USER_QUERY)
 from trl.util import count_tokens
@@ -51,6 +51,32 @@ def test_unstable_kinds_never_in_prefix():
     for kind in (HISTORY, TOOL_RESULT, USER_QUERY):
         prefix, toks = stable_prefix([_m(kind, "leading unstable")])
         assert prefix == [] and toks == 0, kind
+
+
+def test_cacheable_prefix_covers_settled_history():
+    # O1: everything up to the live user query is cacheable (system + tools +
+    # prior turns + tool results), not just the system header.
+    msgs = [_m(SYSTEM, "S" * 40), _m(TOOL_SCHEMA, "T" * 40),
+            _m(HISTORY, "H" * 40), _m(TOOL_RESULT, "R" * 40),
+            _m(USER_QUERY, "live?")]
+    pref, tok, n = cacheable_prefix(msgs)
+    assert n == 4 and [m.kind for m in pref] == [SYSTEM, TOOL_SCHEMA, HISTORY, TOOL_RESULT]
+    # strictly larger than the stable (system-only) prefix
+    _, stable_tok = stable_prefix(msgs)
+    assert tok > stable_tok
+
+
+def test_cacheable_prefix_no_live_query_falls_back():
+    msgs = [_m(SYSTEM, "S" * 40), _m(TOOL_SCHEMA, "T" * 40)]
+    pref, tok, n = cacheable_prefix(msgs)
+    stable_pref, stable_tok = stable_prefix(msgs)
+    assert n == len(stable_pref) and tok == stable_tok
+
+
+def test_cacheable_prefix_live_query_first_is_empty():
+    msgs = [_m(USER_QUERY, "just a question")]
+    pref, tok, n = cacheable_prefix(msgs)
+    assert n == 0 and tok == 0
 
 
 if __name__ == "__main__":

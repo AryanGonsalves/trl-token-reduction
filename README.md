@@ -71,6 +71,13 @@ tracing tasks as well as the full context. Honest scope: this is a ~30k-token re
 *medium* scale, not a 500k-line monorepo, and n=3 tasks. (Reproduce:
 `validate/bigcode_bench.py`, hard-capped at $1.80/provider.)
 
+**Independent out-of-distribution check.** Pointed the retriever at a *separate
+~52k-token production Python codebase it had never seen* (35 files, 359 symbols) and ran
+8 natural-language audit queries. Retrieval returned ~1k tokens of slices per query vs the
+52k whole-dump — **~98% fewer** — with the answer-bearing module/symbol as the top hit on
+descriptively-named queries. (Informal relevance check, not a labeled precision eval; point
+it at your own repo: `python -m validate.measure_repo_reduction --repo <path>`.)
+
 | Earlier single-lever / mid-tier runs | Reduction | Quality / correctness |
 |----------------|-----------|-----------------------|
 | Realistic verifier suite — **OpenAI**, safe mode | **2.59× cheaper**, 43.1% fewer input tokens, 62.7% fewer sub-units | 100% → 100%, non-inferiority **PASS** |

@@ -153,8 +153,8 @@ stacking on top. The blind proxy delivers the compression + caching portion only
 (the single-lever live-proxy rows above: ~56–68% on a bloated turn).
 
 - `trl/` — the shared engine (caching, compression+guard, cascade router) and
-  `trl/retrieval/` (tree-sitter extractor + retriever, **12 languages / 18 file
-  types**: Python, JS/JSX, TS/TSX, Go, Rust, Java, C#, C, C++, Ruby, PHP, Kotlin),
+  `trl/retrieval/` (tree-sitter extractor + retriever, **13 languages / 20 file
+  types**: Python, JS/JSX, TS/TSX, Go, Rust, Java, C#, C, C++, Ruby, PHP, Kotlin, Luau/Roblox),
   plus a general **text + PDF** retriever (`text_index.py`, `pdf.py`) so non-code
   documents get the same slice-don't-dump treatment.
 - `bench/` — the harness: baseline (cache-enabled) vs treatment, real token/$

@@ -26,6 +26,7 @@ def _php():
     fn = getattr(m, "language_php", None) or getattr(m, "language", None)
     return fn()
 def _kt():   import tree_sitter_kotlin as m; return m.language()
+def _luau(): import tree_sitter_luau as m; return m.language()
 
 # per-language: grammar factory, {def-node: kind}, call-node type, arrow-consts?
 _JS_DEFS = {"function_declaration": "function", "class_declaration": "class",
@@ -75,6 +76,10 @@ _LANGS = {
     ".kt":  {"lang": _kt, "defs": {"function_declaration": "function",
              "class_declaration": "class", "object_declaration": "class"},
              "call": "call_expression", "arrow": False},
+    ".luau": {"lang": _luau, "defs": {"function_declaration": "function"},
+              "call": "function_call", "arrow": False},
+    ".lua": {"lang": _luau, "defs": {"function_declaration": "function"},
+             "call": "function_call", "arrow": False},
 }
 
 _IGNORE_DIRS = {
@@ -164,7 +169,7 @@ _NAME_NODES = ("identifier", "field_identifier", "type_identifier",
 def _def_name(node, src) -> str:
     nm = node.child_by_field_name("name")
     if nm is not None:
-        return _text(nm, src).split("::")[-1]
+        return _text(nm, src).split("::")[-1].split(".")[-1].split(":")[-1]
     # C/C++: the name lives inside the declarator chain
     decl = node.child_by_field_name("declarator")
     seen = 0

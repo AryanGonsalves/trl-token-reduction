@@ -22,5 +22,6 @@ tree_sitter_cpp>=0.21
 tree_sitter_ruby>=0.21
 tree_sitter_php>=0.22
 tree_sitter_kotlin>=1.0
+tree_sitter_luau>=0.2
 # MCP plugin server (Claude Code / Codex integration)
 mcp>=1.0

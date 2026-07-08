@@ -156,3 +156,21 @@ def test_symbol_id_unique_per_location():
 if __name__ == "__main__":
     import pytest
     raise SystemExit(pytest.main([__file__, "-q"]))
+
+
+def test_luau_roblox_symbols(tmp_path):
+    """Roblox Luau: table.method, table:method, and local function all extract with
+    their last-segment name (Weapon.new -> new, Weapon:fire -> fire)."""
+    from trl.retrieval.ast_index import extract_file
+    f = tmp_path / "weapon.luau"
+    f.write_text(
+        "local Weapon = {}\n"
+        "function Weapon.new(name) return setmetatable({ammo=30}, Weapon) end\n"
+        "function Weapon:fire() self.ammo -= 1; hitscan(self) end\n"
+        "local function reload(g) g.ammo = 30 end\n"
+    )
+    syms = {s.name: s for s in extract_file(str(f))}
+    assert {"new", "fire", "reload"} <= set(syms), syms.keys()
+    assert syms["new"].kind == "function"
+    assert "setmetatable" in syms["new"].refs
+    assert "hitscan" in syms["fire"].refs

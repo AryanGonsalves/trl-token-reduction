@@ -37,6 +37,34 @@ def _target(repo=None):
     return resolved
 
 
+def _log_savings(kind, query, target, slice_tokens, symbols):
+    """Best-effort adoption + savings log (opt-in via env TRL_SAVINGS_LOG). Records the
+    slices actually returned vs the whole-file counterfactual (the files those slices came
+    from), so cumulative savings sum across sessions. NEVER raises -- must not break retrieval."""
+    path = os.environ.get("TRL_SAVINGS_LOG")
+    if not path:
+        return
+    try:
+        import json, time
+        from trl.util import count_tokens
+        files = {s.file for s in symbols}
+        whole = 0
+        for f in files:
+            try:
+                whole += count_tokens(open(f, encoding="utf-8", errors="ignore").read())
+            except Exception:
+                pass
+        rec = {"ts": time.time(), "tool": kind, "repo": target, "query": (query or "")[:120],
+               "slice_tokens": int(slice_tokens), "wholefile_tokens": whole,
+               "saved": max(0, whole - int(slice_tokens)), "n_slices": len(symbols),
+               "n_files": len(files)}
+        os.makedirs(os.path.dirname(os.path.abspath(path)) or ".", exist_ok=True)
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(rec) + "\n")
+    except Exception:
+        pass
+
+
 if FastMCP is not None:
     mcp = FastMCP("trl-retrieve")
 
@@ -49,6 +77,7 @@ if FastMCP is not None:
         if target is None:
             return _UNRESOLVED
         r = retrieve(get_index(target), query, token_budget=budget, k=8)
+        _log_savings("retrieve_code", query, target, r["tokens"], r["symbols"])
         return r["context"] or "(no relevant symbols found)"
 
     @mcp.tool()
@@ -62,8 +91,11 @@ if FastMCP is not None:
         hits = [s for s in idx["symbols"] if s.name == name]
         if not hits:
             return f"(no symbol named {name})"
+        picked = hits[:5]
+        from trl.util import count_tokens
+        _log_savings("explain_symbol", name, target, sum(count_tokens(s.source) for s in picked), picked)
         return "\n\n".join(f"# {s.file}:{s.start_line}-{s.end_line} ({s.kind})\n{s.source}"
-                           for s in hits[:5])
+                           for s in picked)
 
     def main():
         mcp.run()

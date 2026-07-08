@@ -41,9 +41,22 @@ def _worst_case_usd(est_input_tok):
             + MAX_OUTPUT * PRICE_OUT) / 1e6
 
 
+def _stable_system(index):
+    """A large, STABLE system prefix (same every step) that a real coding agent
+    carries -- instructions + a repo map. Must exceed Anthropic's minimum cacheable
+    prefix (2048 tok Haiku / 1024 Sonnet) or the API silently skips caching."""
+    guide = ("You are a coding agent operating inside a fixed repository. Follow these "
+             "rules consistently on every turn: prefer precise, grounded answers; cite "
+             "file and symbol names; never invent APIs; keep answers brief and correct. ") * 10
+    files = sorted({s.file.split("/")[-1] for s in index["symbols"]})
+    syms = sorted({s.name for s in index["symbols"]})[:500]
+    repo_map = "Repository files:\n" + ", ".join(files) + "\n\nKnown symbols:\n" + ", ".join(syms)
+    return guide + "\n\n" + repo_map
+
+
 def _build_step_request(index, query, history, engine):
     r = retrieve(index, query, token_budget=800, k=6)
-    sys_txt = "You are a coding agent for this repo. Answer briefly.\n" * 6
+    sys_txt = _stable_system(index)
     msgs = []
     if history:
         msgs.append({"role": "user", "content": "prior notes:\n" + "\n".join(history)})

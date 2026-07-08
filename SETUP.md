@@ -14,8 +14,7 @@ of Claude Code, which does its own caching.)
 - Python 3.10+ on your PATH.
 - The server's dependencies:
   ```
-  pip install mcp
-  pip install -r requirements.txt        # tree-sitter grammars incl. Luau
+  pip install -r requirements-plugin.txt   # all languages + runtime; no benchmark/API bloat
   ```
 
 ## 1. Install the plugin in Claude Code

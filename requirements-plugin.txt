@@ -1,0 +1,21 @@
+# Everything the TRL retrieval PLUGIN needs — all languages bundled so you never
+# have to guess. Excludes the benchmark/rerank deps (anthropic, openai, model2vec):
+# the plugin never uses them, and model2vec can fail to build and block the install.
+mcp>=1.0
+tiktoken>=0.7.0          # token-aware counting (retrieval budget + savings log)
+pathspec>=0.11           # .gitignore-aware indexing
+pyyaml>=6.0              # config (optional; bundled fallback parser exists)
+tree_sitter>=0.21
+tree_sitter_python>=0.21
+tree_sitter_javascript>=0.21
+tree_sitter_typescript>=0.21
+tree_sitter_go>=0.21
+tree_sitter_rust>=0.21
+tree_sitter_java>=0.21
+tree_sitter_c_sharp>=0.21
+tree_sitter_c>=0.21
+tree_sitter_cpp>=0.21
+tree_sitter_ruby>=0.21
+tree_sitter_php>=0.22
+tree_sitter_kotlin>=1.0
+tree_sitter_luau>=0.2

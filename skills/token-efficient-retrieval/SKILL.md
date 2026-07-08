@@ -14,7 +14,7 @@ read whole files. Instead:
 - Call **`explain_symbol(name)`** to fetch the full source of a named symbol.
 - Only fall back to reading whole files if retrieval returns nothing relevant.
 
-Run `/trl-index` once first to build the retrieval index for the project.
+The index builds automatically on your first `retrieve_code` call (cached at `<project>/.trl/index.json`, incremental). Just call the tools directly — no setup step. If a tool says it "couldn't resolve your project", set `TRL_REPO` or pass `repo='/path'`.
 
 ## Optional precision (off by default)
 

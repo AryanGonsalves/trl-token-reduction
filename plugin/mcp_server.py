@@ -69,22 +69,34 @@ if FastMCP is not None:
     mcp = FastMCP("trl-retrieve")
 
     @mcp.tool()
-    def retrieve_code(query: str, budget: int = 1200, repo: str = "") -> str:
-        """Return the most relevant code slices for a question. Prefer this over
-        grepping and reading whole files -- exact source, far fewer tokens. Pass
-        repo='/path' to target a specific project."""
-        target = _target(repo or None)
+    def retrieve_code(query: str = "", budget: int = 1200, k: int = 8, repo: str = "",
+                      token_budget: int = 0, limit: int = 0, path: str = "",
+                      project: str = "") -> str:
+        """Return the most relevant code slices for a question, instead of reading whole
+        files. Args: query (the question -- REQUIRED string), k (max slices, default 8),
+        budget (token budget, default 1200), repo (optional project path). Common aliases
+        token_budget/limit/path/project are also accepted. Prefer this over grep/opening files."""
+        query = (query or "").strip()
+        if not query:
+            return ("retrieve_code needs a 'query' string, e.g. "
+                    "retrieve_code(query=\"how does the stash update\").")
+        budget = token_budget or budget
+        k = limit or k
+        target = _target(repo or path or project or None)
         if target is None:
             return _UNRESOLVED
-        r = retrieve(get_index(target), query, token_budget=budget, k=8)
+        r = retrieve(get_index(target), query, token_budget=budget, k=k)
         _log_savings("retrieve_code", query, target, r["tokens"], r["symbols"])
         return r["context"] or "(no relevant symbols found)"
 
     @mcp.tool()
-    def explain_symbol(name: str, repo: str = "") -> str:
-        """Return the exact source of a function/class/method by name. Pass
-        repo='/path' to target a specific project."""
-        target = _target(repo or None)
+    def explain_symbol(name: str = "", repo: str = "", path: str = "", project: str = "") -> str:
+        """Return the exact source of a function/class/method by name. Args: name (REQUIRED),
+        repo (optional project path). Aliases path/project accepted."""
+        name = (name or "").strip()
+        if not name:
+            return "explain_symbol needs a 'name', e.g. explain_symbol(name=\"StashService\")."
+        target = _target(repo or path or project or None)
         if target is None:
             return _UNRESOLVED
         idx = get_index(target)

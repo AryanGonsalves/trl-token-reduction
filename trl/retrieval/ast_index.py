@@ -218,7 +218,24 @@ def extract_file(path: str, source: bytes | None = None) -> List[Symbol]:
             source = f.read()
     tree = parser.parse(source)
     call_type = spec["call"]
+    is_lua = ext in (".luau", ".lua")
     syms: List[Symbol] = []
+
+    def _lua_module_table(node):
+        # Lua/Luau `local X = { ... }` -> return X (a module/config table), else None.
+        # Roblox code is mostly ModuleScripts returning tables + config tables, which the
+        # function-only indexer misses; index them so structural queries can hit.
+        asn = next((c for c in node.children if c.type == "assignment_statement"), None)
+        if asn is None:
+            return None
+        vlist = next((c for c in asn.children if c.type == "variable_list"), None)
+        vexpr = next((c for c in asn.children if c.type == "expression_list"), None)
+        if vlist is None or vexpr is None:
+            return None
+        if not _text(vexpr, source).lstrip().startswith("{"):
+            return None
+        nm = next((c for c in vlist.children if c.type == "identifier"), None)
+        return _text(nm, source) if nm is not None else None
 
     def visit(node, cls=None):
         handled = False
@@ -240,11 +257,31 @@ def extract_file(path: str, source: bytes | None = None) -> List[Symbol]:
                 handled = True
                 syms.append(_mk(val, _text(nm, source),
                                 "method" if cls else "function", path, source, call_type))
+        # Lua/Luau module/config tables: `local X = {..}` (still recurse for nested funcs)
+        elif is_lua and node.type == "variable_declaration":
+            nm = _lua_module_table(node)
+            if nm is not None:
+                syms.append(_mk(node, nm, "table", path, source, call_type))
         if not handled:
             for c in node.children:
                 visit(c, cls)
 
     visit(tree.root_node)
+
+    # Lua/Luau top-level script with no funcs/tables (e.g. init.server.luau: require +
+    # connect + print) -> index the whole file as a module so "server bootstrap"-style
+    # queries can find it. Name keeps the dotted stem (init.server.luau -> init.server).
+    if is_lua and not syms:
+        base = os.path.basename(path)
+        for suf in (".luau", ".lua"):
+            if base.endswith(suf):
+                base = base[: -len(suf)]
+                break
+        refs: Set[str] = set()
+        _collect_refs(tree.root_node, call_type, source, refs)
+        syms.append(Symbol(name=base or "module", kind="module", file=path,
+                           start_line=1, end_line=tree.root_node.end_point[0] + 1,
+                           source=_text(tree.root_node, source)[:2000], refs=refs))
     return syms
 
 

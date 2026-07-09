@@ -174,3 +174,26 @@ def test_luau_roblox_symbols(tmp_path):
     assert syms["new"].kind == "function"
     assert "setmetatable" in syms["new"].refs
     assert "hitscan" in syms["fire"].refs
+
+
+def test_luau_module_tables_and_bootstrap(tmp_path):
+    """Roblox reality: config tables, ModuleScript tables, and top-level bootstrap scripts
+    must be indexed (not just functions), or structural queries return nothing."""
+    from trl.retrieval.ast_index import extract_file
+    cfg = tmp_path / "Config.luau"
+    cfg.write_text("--!strict\nlocal Config = { GameName = \"Hoard!\" }\nreturn Config\n")
+    c = {s.name: s for s in extract_file(str(cfg))}
+    assert "Config" in c and c["Config"].kind == "table"
+
+    svc = tmp_path / "DataService.luau"
+    svc.write_text("local DataService = {}\nfunction DataService.Load(p) return {} end\n"
+                   "return DataService\n")
+    d = {s.name: s for s in extract_file(str(svc))}
+    assert "DataService" in d and d["DataService"].kind == "table"
+    assert "Load" in d  # functions still extracted alongside the table
+
+    boot = tmp_path / "init.server.luau"
+    boot.write_text("local X = require(script.DataService)\n"
+                    "game.Players.PlayerAdded:Connect(function(p) end)\nprint(\"up\")\n")
+    b = {s.name: s for s in extract_file(str(boot))}
+    assert "init.server" in b and b["init.server"].kind == "module"

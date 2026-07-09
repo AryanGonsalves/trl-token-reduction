@@ -125,3 +125,29 @@ Done and covered by new tests. Note the one caveat at the end.
   `compress_request` gained a trailing `kinds=` kwarg. `build_index` signature, `Engine.process`,
   `/compress` + proxy shapes, and the `trl-proxy`/`trl-retrieve`/`trl-cli`
   entry points are unchanged.
+
+---
+
+## Install UX backlog (from the live Claude Code + Roblox dogfood)
+
+**Verdict:** auto-targeting is genuinely one-and-done (CLAUDE_PROJECT_DIR resolves the project,
+no config) — but INSTALL is NOT "simple one-time." A real user hit: SSH-clone failure (needs
+HTTPS URL), Python deps missing (venv OR `pip install --user`), "which interpreter does Claude
+Code use" fragility (MCP server failed on relaunch until deps were in the SYSTEM python too),
+`/reload-plugins` required, plugin got toggled Disabled, version bump needed for `Update now`.
+
+**Root cause:** any plugin that makes the user pip-install into the right interpreter cannot be
+one-click. Fix directions (do these to make it real one-time):
+1. **Bundle deps** — vendor the pure-python deps + tree-sitter wheels inside the plugin so no
+   pip step is needed (the MCP server adds the vendored dir to sys.path).
+2. **First-run bootstrap** — on first server start, auto `pip install` the missing deps into the
+   running interpreter (guarded, idempotent), or ship a one-shot `trl-plugin-setup` script.
+3. **Self-contained runtime** — freeze the server (PyInstaller / zipapp `.pyz`) and point the
+   `.mcp.json` `command` at the bundled binary, so no interpreter/deps selection at all.
+4. **Interpreter pin/auto-detect** — resolve a known-good python (or the venv) in the server
+   launch instead of bare `python`, to kill the relaunch fragility.
+5. Docs: SETUP.md already covers venv + HTTPS + `--user`; keep it as the interim path.
+
+**Tool robustness (done):** `retrieve_code`/`explain_symbol` now accept common param aliases
+(`k`, `token_budget`, `limit`, `path`, `project`) and soft-require query/name (self-correcting
+hint instead of "Invalid tool parameters"). Fixes silent retrieval-call failures seen in the dogfood.

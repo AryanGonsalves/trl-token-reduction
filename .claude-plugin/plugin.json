@@ -1,6 +1,6 @@
 {
   "name": "trl",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "Token-efficient code retrieval for coding agents: pull exact AST slices via MCP instead of reading whole files. Retrieval-tier savings; optional hosted rerank for precision.",
   "author": { "name": "AryanGonsalves", "url": "https://github.com/AryanGonsalves/trl-token-reduction" }
 }

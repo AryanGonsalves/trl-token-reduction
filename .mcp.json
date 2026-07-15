@@ -2,7 +2,7 @@
   "mcpServers": {
     "trl-retrieve": {
       "command": "cmd",
-      "args": ["/c", "trl-retrieve.exe"],
+      "args": ["/c", ".\\trl-retrieve.exe"],
       "cwd": "${CLAUDE_PLUGIN_ROOT}\\bin"
     }
   }

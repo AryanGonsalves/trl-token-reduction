@@ -1,0 +1,297 @@
+TRL installed-plugin diag  Wed 07/15/2026 16:32:45.17
+USERPROFILE=C:\Users\Aryan's Laptop
+
+=== installed trl plugin.json (version check) ===
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.1.0\.claude-plugin\plugin.json ---
+{
+  "name": "trl",
+  "version": "0.1.0",
+  "description": "Token-efficient code retrieval for coding agents: pull exact AST slices via MCP instead of reading whole files. Retrieval-tier savings; optional hosted rerank for precision.",
+  "author": { "name": "AryanGonsalves", "url": "https://github.com/AryanGonsalves/trl-token-reduction" }
+}
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.1.1\.claude-plugin\plugin.json ---
+{
+  "name": "trl",
+  "version": "0.1.1",
+  "description": "Token-efficient code retrieval for coding agents: pull exact AST slices via MCP instead of reading whole files. Retrieval-tier savings; optional hosted rerank for precision.",
+  "author": { "name": "AryanGonsalves", "url": "https://github.com/AryanGonsalves/trl-token-reduction" }
+}
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.1.3\.claude-plugin\plugin.json ---
+{
+  "name": "trl",
+  "version": "0.1.3",
+  "description": "Token-efficient code retrieval for coding agents: pull exact AST slices via MCP instead of reading whole files. Retrieval-tier savings; optional hosted rerank for precision.",
+  "author": { "name": "AryanGonsalves", "url": "https://github.com/AryanGonsalves/trl-token-reduction" }
+}
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.0\.claude-plugin\plugin.json ---
+{
+  "name": "trl",
+  "version": "0.2.0",
+  "description": "Token-efficient code retrieval for coding agents: pull exact AST slices via MCP instead of reading whole files. Retrieval-tier savings; optional hosted rerank for precision.",
+  "author": { "name": "AryanGonsalves", "url": "https://github.com/AryanGonsalves/trl-token-reduction" }
+}
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.1\.claude-plugin\plugin.json ---
+{
+  "name": "trl",
+  "version": "0.2.1",
+  "description": "Token-efficient code retrieval for coding agents: pull exact AST slices via MCP instead of reading whole files. Retrieval-tier savings; optional hosted rerank for precision.",
+  "author": { "name": "AryanGonsalves", "url": "https://github.com/AryanGonsalves/trl-token-reduction" }
+}
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.2\.claude-plugin\plugin.json ---
+{
+  "name": "trl",
+  "version": "0.2.2",
+  "description": "Token-efficient code retrieval for coding agents: pull exact AST slices via MCP instead of reading whole files. Retrieval-tier savings; optional hosted rerank for precision.",
+  "author": { "name": "AryanGonsalves", "url": "https://github.com/AryanGonsalves/trl-token-reduction" }
+}
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\marketplaces\trl-marketplace\.claude-plugin\plugin.json ---
+{
+  "name": "trl",
+  "version": "0.2.2",
+  "description": "Token-efficient code retrieval for coding agents: pull exact AST slices via MCP instead of reading whole files. Retrieval-tier savings; optional hosted rerank for precision.",
+  "author": { "name": "AryanGonsalves", "url": "https://github.com/AryanGonsalves/trl-token-reduction" }
+}
+
+
+=== installed .mcp.json (launch form actually in use) ===
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.1.0\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "python",
+      "args": ["-m", "plugin.mcp_server"],
+      "cwd": "${CLAUDE_PLUGIN_ROOT}",
+      "env": {
+        "PYTHONPATH": "${CLAUDE_PLUGIN_ROOT}"
+      }
+    }
+  }
+}
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.1.0\plugin\claude-code\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "python",
+      "args": [
+        "-m",
+        "plugin.mcp_server"
+      ],
+      "cwd": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+        "TRL_REPO": "."
+      }
+    }
+  }
+}
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.1.1\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "python",
+      "args": ["-m", "plugin.mcp_server"],
+      "cwd": "${CLAUDE_PLUGIN_ROOT}",
+      "env": {
+        "PYTHONPATH": "${CLAUDE_PLUGIN_ROOT}"
+      }
+    }
+  }
+}
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.1.1\plugin\claude-code\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "python",
+      "args": [
+        "-m",
+        "plugin.mcp_server"
+      ],
+      "cwd": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+        "TRL_REPO": "."
+      }
+    }
+  }
+}
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.1.3\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "python",
+      "args": ["-m", "plugin.mcp_server"],
+      "cwd": "${CLAUDE_PLUGIN_ROOT}",
+      "env": {
+        "PYTHONPATH": "${CLAUDE_PLUGIN_ROOT}"
+      }
+    }
+  }
+}
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.1.3\plugin\claude-code\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "python",
+      "args": [
+        "-m",
+        "plugin.mcp_server"
+      ],
+      "cwd": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+        "TRL_REPO": "."
+      }
+    }
+  }
+}
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.0\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/trl-retrieve.exe",
+      "args": [],
+      "cwd": "${CLAUDE_PLUGIN_ROOT}"
+    }
+  }
+}
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.0\plugin\claude-code\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "python",
+      "args": [
+        "-m",
+        "plugin.mcp_server"
+      ],
+      "cwd": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+        "TRL_REPO": "."
+      }
+    }
+  }
+}
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.1\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "python",
+      "args": ["-m", "plugin.mcp_server"],
+      "cwd": "${CLAUDE_PLUGIN_ROOT}",
+      "env": {
+        "PYTHONPATH": "${CLAUDE_PLUGIN_ROOT}"
+      }
+    }
+  }
+}
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.1\plugin\claude-code\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "python",
+      "args": [
+        "-m",
+        "plugin.mcp_server"
+      ],
+      "cwd": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+        "TRL_REPO": "."
+      }
+    }
+  }
+}
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.2\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "cmd",
+      "args": ["/c", "trl-retrieve.exe"],
+      "cwd": "${CLAUDE_PLUGIN_ROOT}\\bin"
+    }
+  }
+}
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.2\plugin\claude-code\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "python",
+      "args": [
+        "-m",
+        "plugin.mcp_server"
+      ],
+      "cwd": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+        "TRL_REPO": "."
+      }
+    }
+  }
+}
+--- C:\Users\Aryan's Laptop\.claude\plugins\marketplaces\trl-marketplace\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "cmd",
+      "args": ["/c", "trl-retrieve.exe"],
+      "cwd": "${CLAUDE_PLUGIN_ROOT}\\bin"
+    }
+  }
+}
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\marketplaces\trl-marketplace\plugin\claude-code\.mcp.json ---
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "python",
+      "args": [
+        "-m",
+        "plugin.mcp_server"
+      ],
+      "cwd": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+      "env": {
+        "PYTHONPATH": "/ABSOLUTE/PATH/TO/trl-token-reduction",
+        "TRL_REPO": "."
+      }
+    }
+  }
+}
+
+=== installed trl-retrieve.exe (integrity via --selftest) ===
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.0\bin\trl-retrieve.exe ---
+07/15/2026  05:22 AM        26,715,960 trl-retrieve.exe
+[selftest output]:
+[PYI-24248:ERROR] Could not load PyInstaller's embedded PKG archive from the executable (C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.0\bin\trl-retrieve.exe)
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.1\bin\trl-retrieve.exe ---
+07/15/2026  05:22 AM        26,715,960 trl-retrieve.exe
+[selftest output]:
+[PYI-31084:ERROR] Could not load PyInstaller's embedded PKG archive from the executable (C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.1\bin\trl-retrieve.exe)
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\cache\trl-marketplace\trl\0.2.2\bin\trl-retrieve.exe ---
+07/15/2026  04:26 PM        26,717,202 trl-retrieve.exe
+[selftest output]:
+SELFTEST OK: 3 symbols, retrieved 2 for 'config get', langs=['.luau', '.py']
+
+--- C:\Users\Aryan's Laptop\.claude\plugins\marketplaces\trl-marketplace\bin\trl-retrieve.exe ---
+07/15/2026  04:26 PM        26,717,202 trl-retrieve.exe
+[selftest output]:
+SELFTEST OK: 3 symbols, retrieved 2 for 'config get', langs=['.luau', '.py']
+
+
+=== repo exe for comparison ===
+SELFTEST OK: 3 symbols, retrieved 2 for 'config get', langs=['.luau', '.py']
+
+=== done ===

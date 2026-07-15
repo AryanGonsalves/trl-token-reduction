@@ -52,3 +52,8 @@ NEW_CHAT_CONTEXT.md
 # internal planning/optimization docs (reference personal machine/decisions) — keep local
 PLUGIN_DESIGN.md
 OPTIMIZATIONS.md
+
+# frozen-binary build
+.buildvenv/
+build_result.txt
+*.spec.bak

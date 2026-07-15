@@ -53,3 +53,14 @@ TRL indexes Luau, so Roblox codebases work. Point Claude Code at your Rojo proje
 folder (the one holding your `.luau` sources) and build — the agent retrieves slices
 from your Luau instead of whole ModuleScripts. Visual/asset work, built-in proximity
 voice, and publishing stay in Roblox Studio.
+
+## Seamless install (Windows, v0.2.0+) — no Python needed
+As of v0.2.0 the plugin ships a self-contained `bin/trl-retrieve.exe` and `.mcp.json` launches
+it directly, so on Windows you do NOT need Python, pip, a venv, or `requirements-plugin.txt` —
+just install the plugin:
+```
+/plugin marketplace add https://github.com/AryanGonsalves/trl-token-reduction
+/plugin install trl
+```
+The prerequisites/venv steps above are only for the cross-platform **source** install (macOS/Linux,
+or if you prefer running from Python). To use that path, copy `.mcp.python.json.txt` over `.mcp.json`.

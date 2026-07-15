@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "python",
+      "args": ["-m", "plugin.mcp_server"],
+      "cwd": "${CLAUDE_PLUGIN_ROOT}",
+      "env": {
+        "PYTHONPATH": "${CLAUDE_PLUGIN_ROOT}"
+      }
+    }
+  }
+}

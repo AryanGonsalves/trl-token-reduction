@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/trl-retrieve.exe",
+      "args": [],
+      "cwd": "${CLAUDE_PLUGIN_ROOT}"
+    }
+  }
+}

@@ -1,0 +1,4 @@
+# Treat all shipped binaries as binary — no CRLF translation, no text diffs.
+bin/** binary
+*.exe binary
+trl-retrieve-* binary

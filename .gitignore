@@ -57,3 +57,18 @@ OPTIMIZATIONS.md
 .buildvenv/
 build_result.txt
 *.spec.bak
+
+# --- local diagnostic / probe outputs (never publish) ---
+*_diag.txt
+*_debug*.log
+*_out.txt
+*_probe*.txt
+claude_probe*.txt
+claude_debug*.log
+node_check.txt
+node_*_out.txt
+node_launch_debug.log
+tools_list_requests.jsonl
+mcp_launch_result.txt
+mcp_live_diag.txt
+installed_plugin_diag.txt

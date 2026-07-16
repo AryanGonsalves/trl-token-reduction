@@ -1,0 +1,77 @@
+name: build-binaries
+# Build the self-contained trl-retrieve MCP server for every OS and commit the
+# results into bin/ so the plugin's Node launcher (bin/launch.mjs) finds a local
+# binary on any platform (zero runtime network). Trigger manually from the Actions
+# tab (workflow_dispatch) after changing the retrieval/packaging code.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            out: trl-retrieve-win-x64.exe
+            built: dist/trl-retrieve.exe
+          - os: ubuntu-latest
+            out: trl-retrieve-linux-x64
+            built: dist/trl-retrieve
+          - os: macos-14          # Apple Silicon (arm64)
+            out: trl-retrieve-macos-arm64
+            built: dist/trl-retrieve
+          - os: macos-13          # Intel (x64)
+            out: trl-retrieve-macos-x64
+            built: dist/trl-retrieve
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build deps
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install pyinstaller
+          python -m pip install -r requirements-plugin.txt
+      - name: Freeze
+        run: python -m PyInstaller --clean --noconfirm packaging/trl-retrieve.spec
+      - name: Selftest
+        run: ${{ matrix.built }} --selftest
+      - name: Rename to per-OS name
+        shell: bash
+        run: |
+          mkdir -p out
+          cp "${{ matrix.built }}" "out/${{ matrix.out }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.out }}
+          path: out/${{ matrix.out }}
+
+  commit:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: _artifacts
+      - name: Stage binaries into bin/
+        run: |
+          mkdir -p bin
+          find _artifacts -type f -exec cp {} bin/ \;
+          chmod +x bin/trl-retrieve-linux-x64 bin/trl-retrieve-macos-* 2>/dev/null || true
+          ls -la bin/
+      - name: Commit
+        run: |
+          git config user.name  "trl-ci"
+          git config user.email "ci@users.noreply.github.com"
+          git add -f bin/trl-retrieve-*
+          git commit -m "ci: rebuild cross-OS trl-retrieve binaries" || echo "no changes"
+          git push

@@ -54,13 +54,26 @@ folder (the one holding your `.luau` sources) and build — the agent retrieves 
 from your Luau instead of whole ModuleScripts. Visual/asset work, built-in proximity
 voice, and publishing stay in Roblox Studio.
 
-## Seamless install (Windows, v0.2.0+) — no Python needed
-As of v0.2.0 the plugin ships a self-contained `bin/trl-retrieve.exe` and `.mcp.json` launches
-it directly, so on Windows you do NOT need Python, pip, a venv, or `requirements-plugin.txt` —
-just install the plugin:
+## Seamless install (v0.3.0+) — no Python needed, any OS
+As of v0.3.0 the plugin ships self-contained prebuilt servers for Windows, macOS, and Linux
+in `bin/`, and `.mcp.json` launches them through a tiny Node dispatcher (`bin/launch.mjs`) that
+picks the right binary for your platform. So on any OS you do NOT need Python, pip, a venv, or
+`requirements-plugin.txt` — just install the plugin:
 ```
 /plugin marketplace add https://github.com/AryanGonsalves/trl-token-reduction
 /plugin install trl
 ```
-The prerequisites/venv steps above are only for the cross-platform **source** install (macOS/Linux,
-or if you prefer running from Python). To use that path, copy `.mcp.python.json.txt` over `.mcp.json`.
+Why a Node launcher: Claude Code's plugin `.mcp.json` has no per-OS field, doesn't apply a `cwd`,
+and only interpolates `${CLAUDE_PLUGIN_ROOT}` in `command`/`args`. Node is the one interpreter
+guaranteed present (Claude Code runs on it), so `command: "node"` + the launcher does the OS
+dispatch and resolves its own directory — immune to `cwd`/PATH quirks and to spaces/apostrophes
+in the install path.
+
+Requirements: Node.js on PATH (bundled with any standard Claude Code install). If no prebuilt
+binary matches your platform, the launcher falls back to `python -m plugin.mcp_server`, which
+needs the `## Prerequisites` deps above (`pip install -r requirements-plugin.txt`).
+
+The per-OS binaries are produced reproducibly by the `build-binaries` GitHub Actions workflow
+(Windows/macOS/Linux runners); maintainers trigger it from the Actions tab after changing the
+retrieval/packaging code. `.mcp.exe.json.txt` / `.mcp.python.json.txt` keep the older direct-exe
+and pure-Python launch forms for reference.

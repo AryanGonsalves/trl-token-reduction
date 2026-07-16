@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "trl-retrieve": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/bin/launch.mjs"]
+    }
+  }
+}

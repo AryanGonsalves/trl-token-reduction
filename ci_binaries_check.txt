@@ -1,0 +1,16 @@
+CI binaries check  Wed 07/15/2026 18:13:31.29
+=== fetching origin (read-only, no working-tree change) ===
+
+=== last 5 commits on origin/main ===
+fd924c3 Token Reduction Layer v0.1.0 - proxy, MCP plugin (Claude Code + Codex), composer extension
+8d593c2 Token Reduction Layer v0.1.0 - proxy, MCP plugin (Claude Code + Codex), composer extension
+1c38538 Token Reduction Layer v0.1.0 - proxy, MCP plugin (Claude Code + Codex), composer extension
+40703a1 Token Reduction Layer v0.1.0 - proxy, MCP plugin (Claude Code + Codex), composer extension
+df14425 Token Reduction Layer v0.1.0 - proxy, MCP plugin (Claude Code + Codex), composer extension
+
+=== bin/ contents on origin/main (path + size) ===
+100644 blob 5f6aa1488b330887990932cdec2b914b1a4209cf    2380	bin/launch.mjs
+100644 blob ca6cd365d65b7d866dc96abcd2ac49e8603f28af 22730168	bin/trl-retrieve-linux-x64
+100644 blob 545c2a75bc8876b19cbc683d5aa3100a221b03b7 26717202	bin/trl-retrieve.exe
+
+=== done ===

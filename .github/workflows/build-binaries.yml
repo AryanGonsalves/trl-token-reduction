@@ -23,13 +23,14 @@ jobs:
           - os: ubuntu-latest
             out: trl-retrieve-linux-x64
             built: dist/trl-retrieve
-          - os: macos-14          # Apple Silicon (arm64)
+          - os: macos-14          # Apple Silicon (arm64) — covers every current Mac
             out: trl-retrieve-macos-arm64
             built: dist/trl-retrieve
-          - os: macos-13          # Intel (x64)
-            out: trl-retrieve-macos-x64
-            built: dist/trl-retrieve
+          # macos-13 (Intel x64) intentionally omitted: deprecated/scarce runner that stalled
+          # the pipeline. Intel Macs fall back to the launcher's Python path. Re-add here if
+          # native Intel support is ever needed.
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 25          # bound slow runners so a stuck leg can't hang the run
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -56,6 +57,7 @@ jobs:
 
   commit:
     needs: build
+    if: ${{ always() }}          # commit whatever binaries finished; never wait on a stuck leg
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,11 +69,11 @@ jobs:
           mkdir -p bin
           find _artifacts -type f -exec cp {} bin/ \;
           chmod +x bin/trl-retrieve-linux-x64 bin/trl-retrieve-macos-* 2>/dev/null || true
-          ls -la bin/
+          echo "staged:"; ls -la bin/ | grep trl-retrieve || echo "(none)"
       - name: Commit
         run: |
           git config user.name  "trl-ci"
           git config user.email "ci@users.noreply.github.com"
-          git add -f bin/trl-retrieve-*
-          git commit -m "ci: rebuild cross-OS trl-retrieve binaries" || echo "no changes"
-          git push
+          git add -f bin/trl-retrieve-* 2>/dev/null || true
+          git commit -m "ci: rebuild cross-OS trl-retrieve binaries" || echo "no changes to commit"
+          git push || echo "nothing to push"

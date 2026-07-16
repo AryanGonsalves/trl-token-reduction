@@ -72,3 +72,9 @@ tools_list_requests.jsonl
 mcp_launch_result.txt
 mcp_live_diag.txt
 installed_plugin_diag.txt
+
+# session diagnostics moved here for review before deletion
+_scratch/
+
+# internal measurement report (keep local)
+HOARD_EFFECTIVENESS_REPORT.md

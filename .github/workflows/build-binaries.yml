@@ -72,8 +72,8 @@ jobs:
           echo "staged:"; ls -la bin/ | grep trl-retrieve || echo "(none)"
       - name: Commit
         run: |
-          git config user.name  "trl-ci"
-          git config user.email "ci@users.noreply.github.com"
+          git config user.name  "AryanGonsalves"
+          git config user.email "aryan.gonsalves123@gmail.com"
           git add -f bin/trl-retrieve-* 2>/dev/null || true
           git commit -m "ci: rebuild cross-OS trl-retrieve binaries" || echo "no changes to commit"
           git push || echo "nothing to push"

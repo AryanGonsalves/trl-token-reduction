@@ -13,7 +13,7 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 
 const binDir = dirname(fileURLToPath(import.meta.url)); // .../<plugin>/bin
 const pluginRoot = dirname(binDir);                     // .../<plugin>
@@ -31,6 +31,20 @@ function candidates() {
 }
 
 let cmd, args, extraEnv = {};
+
+// Auto-enable retrieval savings logging per project, so adoption + tokens-saved are
+// tracked with no setup. Opt out with TRL_SAVINGS_LOG=off; override with an explicit path.
+if (!process.env.TRL_SAVINGS_LOG) {
+  const base = process.env.CLAUDE_PROJECT_DIR || process.cwd() || pluginRoot;
+  const logDir = join(base, ".trl");
+  try {
+    mkdirSync(logDir, { recursive: true });
+    extraEnv.TRL_SAVINGS_LOG = join(logDir, "savings.jsonl");
+  } catch { /* read-only project dir -> skip logging */ }
+} else if (process.env.TRL_SAVINGS_LOG.toLowerCase() === "off") {
+  extraEnv.TRL_SAVINGS_LOG = "";
+}
+
 const found = candidates().map((n) => join(binDir, n)).find((p) => existsSync(p));
 if (found) {
   cmd = found;

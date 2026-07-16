@@ -42,8 +42,18 @@ def _log_savings(kind, query, target, slice_tokens, symbols):
     slices actually returned vs the whole-file counterfactual (the files those slices came
     from), so cumulative savings sum across sessions. NEVER raises -- must not break retrieval."""
     path = os.environ.get("TRL_SAVINGS_LOG")
-    if not path:
+    if path and path.strip().lower() == "off":
         return
+    if not path:
+        # Deterministic default: log into the repo we are actually retrieving from, so
+        # tracking never depends on launcher env / cwd (fixes the split/undercounted logs).
+        try:
+            if target and os.path.isdir(target):
+                path = os.path.join(target, ".trl", "savings.jsonl")
+            else:
+                return
+        except Exception:
+            return
     try:
         import json, time
         from trl.util import count_tokens

@@ -1,0 +1,76 @@
+probe3 (RobloxShooter)  Wed 07/15/2026 16:52:19.07
+=== cwd ===
+D:\RobloxShooter
+=== claude plugin --help ===
+Usage: claude plugin|plugins [options] [command]
+
+Manage Claude Code plugins
+
+Options:
+  -h, --help                           Display help for command
+
+Commands:
+  details [options] <name>             Show a plugin's component inventory and
+                                       projected token cost
+  disable [options] [plugin]           Disable an enabled plugin
+  enable [options] <plugin>            Enable a disabled plugin
+  eval [options] [target]              Run eval cases (evals/**/case.yaml or
+                                       evals/**/prompt.md + graders/*.md)
+                                       against a plugin and report scored
+                                       results. Target is a path, a plugin name,
+                                       or a `plugin@marketplace` id — installed
+                                       and skills-dir plugins both resolve (and
+                                       add a no-plugin baseline arm)
+  help [command]                       display help for command
+  init|new [options] <name>            Scaffold a new plugin at
+                                       ~/.claude/skills/<name>/ (auto-loads next
+                                       session as <name>@skills-dir)
+  install|i [options] <plugin>         Install a plugin from available
+                                       marketplaces (use plugin@marketplace for
+                                       specific marketplace)
+  list [options]                       List installed plugins
+  marketplace                          Manage Claude Code marketplaces
+  prune|autoremove [options]           Remove auto-installed dependencies that
+                                       are no longer needed
+  tag [options] [path]                 Create a {name}--v{version} git tag for a
+                                       plugin release, validating that
+                                       plugin.json and any enclosing marketplace
+                                       entry agree
+  uninstall|remove [options] <plugin>  Uninstall an installed plugin
+  update [options] <plugin>            Update a plugin to the latest version
+                                       (restart required to apply)
+  validate [options] <path>            Validate a plugin or marketplace manifest
+
+=== claude plugin list (cwd=RobloxShooter) ===
+Installed plugins:
+
+  > trl@trl-marketplace
+    Version: 0.2.3
+    Scope: project
+    Status: √ enabled
+
+
+=== try: claude plugin enable trl@trl-marketplace ===
+× Failed to enable plugin "trl@trl-marketplace": Plugin "trl@trl-marketplace" is already enabled
+
+=== claude plugin list AFTER enable ===
+Installed plugins:
+
+  > trl@trl-marketplace
+    Version: 0.2.3
+    Scope: project
+    Status: √ enabled
+
+
+=== claude mcp list (cwd=RobloxShooter) ===
+Checking MCP server health…
+
+claude.ai Google Drive: https://drivemcp.googleapis.com/mcp/v1 - √ Connected
+claude.ai Google Calendar: https://calendarmcp.googleapis.com/mcp/v1 - ! Needs authentication
+claude.ai Gmail: https://gmailmcp.googleapis.com/mcp/v1 - ! Needs authentication
+plugin:trl:trl-retrieve: cmd /c .\trl-retrieve.exe - × Failed to connect
+
+=== claude --debug-file -p ping (cwd=RobloxShooter) ===
+Pong — ready when you are. What are we working on in RobloxShooter today?
+
+=== done ===

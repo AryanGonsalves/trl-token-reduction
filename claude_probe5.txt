@@ -1,0 +1,13 @@
+probe5 mcp-list debug  Wed 07/15/2026 16:57:21.57
+=== variant A: claude mcp list --debug-file after subcommand ===
+error: unknown option '--debug-file'
+
+=== variant B: claude --debug-file before subcommand ===
+Checking MCP server health…
+
+claude.ai Google Drive: https://drivemcp.googleapis.com/mcp/v1 - √ Connected
+claude.ai Google Calendar: https://calendarmcp.googleapis.com/mcp/v1 - ! Needs authentication
+claude.ai Gmail: https://gmailmcp.googleapis.com/mcp/v1 - ! Needs authentication
+plugin:trl:trl-retrieve: C:/Users/Aryan's Laptop/.claude/plugins/cache/trl-marketplace/trl/0.2.3\bin\trl-retrieve.exe  - √ Connected
+
+=== done ===

@@ -78,6 +78,31 @@ tracing tasks as well as the full context. Honest scope: this is a ~30k-token re
 descriptively-named queries. (Informal relevance check, not a labeled precision eval; point
 it at your own repo: `python -m validate.measure_repo_reduction --repo <path>`.)
 
+**Real-world longitudinal usage — an entire game built with the plugin (live, logged).**
+Beyond the offline/API benchmarks, the plugin was dogfooded across a *full project*: a Roblox
+game ("Hoard") built with Claude Code over ~11 sessions (10 feature phases + a verify/harden
+pass), from an empty scaffold to a 28-file / ~38k-token codebase. Two independent things were
+measured at every phase — the **direct** retrieval reduction on the repo, and the plugin's **own
+live savings log** (`TRL_SAVINGS_LOG`): exactly what the agent called and what each returned slice
+replaced.
+
+| Hoard (Luau/Roblox), tracked as the repo grew | Result |
+|---|---|
+| **Direct** reduction vs whole-repo dump | **52% -> 98%** as the repo scaled ~2.2k -> ~38k tokens (10/10 relevant top-hits on descriptive queries) |
+| **Live** agent usage (the plugin's savings log) | **84 real calls, 602,659 tokens saved, 90.9% fewer** vs the file(s) those slices would otherwise have been read from |
+
+The live curve climbed with the codebase (85% -> 91% cumulative across phases) toward the ~98%
+per-call direct ceiling — i.e. the bigger the project got, the more a ~few-hundred-token slice beat
+reading whole files. Honest caveats, stated plainly: (1) the live "counterfactual" is the whole
+*file(s)* each slice came from — what the agent would otherwise read — not the whole repo, so it's a
+realistic per-call baseline, not a favorable one; (2) savings only accrue on **adoption** —
+feature-*creation* phases call retrieval little, integration/refactor/hardening phases call it heavily
+(where it pays most), so the cumulative number reflects real mixed usage; (3) scope is one project,
+one developer, one language, and two early phases' calls were **lost to a logging bug before it was
+fixed** (disclosed and excluded) — so the 84 calls are the reliably-logged subset and the true total
+was higher. Reproduce on your own project: `python -m validate.measure_repo_reduction --repo <path>`
+(direct) and set `TRL_SAVINGS_LOG`, then `python -m validate.savings_report <log>` (live).
+
 | Earlier single-lever / mid-tier runs | Reduction | Quality / correctness |
 |----------------|-----------|-----------------------|
 | Realistic verifier suite — **OpenAI**, safe mode | **2.59× cheaper**, 43.1% fewer input tokens, 62.7% fewer sub-units | 100% → 100%, non-inferiority **PASS** |

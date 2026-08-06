@@ -80,18 +80,18 @@ it at your own repo: `python -m validate.measure_repo_reduction --repo <path>`.)
 
 **Real-world longitudinal usage — an entire game built with the plugin (live, logged).**
 Beyond the offline/API benchmarks, the plugin was dogfooded across a *full project*: a Roblox
-game ("Hoard") built with Claude Code over ~11 sessions (10 feature phases + a verify/harden
-pass), from an empty scaffold to a 28-file / ~38k-token codebase. Two independent things were
+game ("Hoard") built with Claude Code across the full project build (many feature, integration, and hardening
+sessions), from an empty scaffold to a 52-file / ~164k-token codebase. Two independent things were
 measured at every phase — the **direct** retrieval reduction on the repo, and the plugin's **own
 live savings log** (`TRL_SAVINGS_LOG`): exactly what the agent called and what each returned slice
 replaced.
 
 | Hoard (Luau/Roblox), tracked as the repo grew | Result |
 |---|---|
-| **Direct** reduction vs whole-repo dump | **52% -> 98%** as the repo scaled ~2.2k -> ~38k tokens (10/10 relevant top-hits on descriptive queries) |
-| **Live** agent usage (the plugin's savings log) | **84 real calls, 602,659 tokens saved, 90.9% fewer** vs the file(s) those slices would otherwise have been read from |
+| **Direct** reduction vs whole-repo dump | **52% -> 99%** as the repo scaled ~2.2k -> ~164k tokens (10/10 relevant top-hits on descriptive queries) |
+| **Live** agent usage (the plugin's savings log) | **188 real calls, ~2.12M tokens saved, 92.9% fewer** vs the file(s) those slices would otherwise have been read from |
 
-The live curve climbed with the codebase (85% -> 91% cumulative across phases) toward the ~98%
+The live curve climbed with the codebase (85% -> 93% cumulative across phases) toward the ~98%
 per-call direct ceiling — i.e. the bigger the project got, the more a ~few-hundred-token slice beat
 reading whole files. Honest caveats, stated plainly: (1) the live "counterfactual" is the whole
 *file(s)* each slice came from — what the agent would otherwise read — not the whole repo, so it's a

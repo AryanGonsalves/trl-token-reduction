@@ -37,6 +37,12 @@ long-standing story is **3–10× on favorable workloads, modest on pure novel
 reasoning.** The point of the 18× demo is that the levers stack multiplicatively,
 not the exact figure.
 
+> **Real-world check (not a synthetic bench):** the retrieval lever was dogfooded across a *full*
+> Claude Code project — a Roblox game built from empty scaffold to a 52-file / ~164k-token codebase.
+> The plugin's own usage log shows **~2.12M input tokens saved in live agent usage (~93% fewer)**
+> across 188 real calls, with **~99% on a direct measurement** of the repo. The game's code + raw
+> savings log are public so you can reproduce it — see the Hoard case study below.
+
 ## Validated on real APIs (billed tokens, not estimates)
 
 The benchmarks above run offline. But the levers were also proven **end-to-end
@@ -101,7 +107,7 @@ feature-*creation* phases call retrieval little, integration/refactor/hardening 
 one developer, one language, and two early phases' calls were **lost to a logging bug before it was
 fixed** (disclosed and excluded) — so the 84 calls are the reliably-logged subset and the true total
 was higher. Reproduce on your own project: `python -m validate.measure_repo_reduction --repo <path>`
-(direct) and set `TRL_SAVINGS_LOG`, then `python -m validate.savings_report <log>` (live).
+(direct) and set `TRL_SAVINGS_LOG`, then `python -m validate.savings_report <log>` (live). The exact game repo (WIP, published as a verifiable benchmark) is at **github.com/AryanGonsalves/hoard**.
 
 | Earlier single-lever / mid-tier runs | Reduction | Quality / correctness |
 |----------------|-----------|-----------------------|

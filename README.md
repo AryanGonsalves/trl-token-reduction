@@ -105,7 +105,7 @@ realistic per-call baseline, not a favorable one; (2) savings only accrue on **a
 feature-*creation* phases call retrieval little, integration/refactor/hardening phases call it heavily
 (where it pays most), so the cumulative number reflects real mixed usage; (3) scope is one project,
 one developer, one language, and two early phases' calls were **lost to a logging bug before it was
-fixed** (disclosed and excluded) — so the 84 calls are the reliably-logged subset and the true total
+fixed** (disclosed and excluded) — so the 188 calls are the reliably-logged subset and the true total
 was higher. Reproduce on your own project: `python -m validate.measure_repo_reduction --repo <path>`
 (direct) and set `TRL_SAVINGS_LOG`, then `python -m validate.savings_report <log>` (live). The exact game repo (WIP, published as a verifiable benchmark) is at **github.com/AryanGonsalves/hoard**.
 

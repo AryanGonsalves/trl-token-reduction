@@ -1,0 +1,22 @@
+Continuing the TRL (Token-Reduction Layer) project. Before anything, read the file
+D:\Token Reduction Layer for LLM\HANDOFF.md in full -- it has the complete context, the paired
+billed-token findings with exact numbers, the environment gotchas, and the ordered task list.
+
+Context in one paragraph: a reviewer correctly showed our headline "93% token savings" for the
+trl-retrieve MCP was CONTENT reduction (slice vs whole-file), not billed-token savings in an agent
+loop. We built a paired billed-token harness (validate/paired_billed_bench.py) comparing an
+agent-with-MCP vs an agent-with-grep+read. Result: quality neutral (~1.5/1.5), cheaper per retrieval
+on well-behaved tasks (~2-6x), BUT an over-retrieval failure mode (agent loops 25+ retrieve_code calls,
+slice history balloons to 280-380k tokens) flips the total (two runs swung -15% to +71%). The README
+is already corrected and pushed (commit ad2fe76). An honest reply is drafted in critic_reply.md.
+
+Do the IMMEDIATE TASKS in HANDOFF.md, starting with task 2: FIX THE OVER-RETRIEVAL BLOWUP in
+plugin/mcp_server.py and skills/token-efficient-retrieval (leaner slices, cap/nudge repeat calls,
+"retrieve once then answer"), then re-run the paired test to confirm it flips to consistently cheaper
+while quality holds.
+
+Constraints (from HANDOFF.md): write files via bash heredoc and verify with Read (the D: mount
+desyncs); git only runs on my Windows machine via run_publish.bat -- ASK me before any push; real API
+runs happen on my machine via a gitignored .bat where I paste the key (sonnet, hard cost cap) -- ASK
+me before spending; do NOT regress any claim back to "93% billed savings". Confirm you've read the
+handoff, then start on the blowup fix.

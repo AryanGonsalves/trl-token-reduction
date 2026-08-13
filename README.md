@@ -37,11 +37,15 @@ long-standing story is **3–10× on favorable workloads, modest on pure novel
 reasoning.** The point of the 18× demo is that the levers stack multiplicatively,
 not the exact figure.
 
-> **Real-world check (not a synthetic bench):** the retrieval lever was dogfooded across a *full*
-> Claude Code project — a Roblox game built from empty scaffold to a 52-file / ~164k-token codebase.
-> The plugin's own usage log shows **~2.12M input tokens saved in live agent usage (~93% fewer)**
-> across 188 real calls, with **~99% on a direct measurement** of the repo. The game's code + raw
-> savings log are public so you can reproduce it — see the Hoard case study below.
+> **Read the retrieval numbers carefully (updated after a paired billed-token test).** The ~93% / ~99%
+> figures below measure *content reduction* — how much smaller a returned slice is than reading the
+> whole file(s) it came from. That is **not** billed-token savings in an agent loop. In a paired test
+> on a real repo (provider-billed input tokens summed over every turn, answers graded, vs a plain
+> grep+read agent), retrieval was **quality-neutral** and cheaper *per retrieval*, but a current
+> **over-retrieval failure mode** can make the *total* net-neutral-to-worse (two runs swung from ~15%
+> cheaper to ~70% costlier). So read ~93% / ~99% as "vs reading whole files," not "vs a competent
+> shell agent." The paired harness, the numbers, and the honest breakdown are in the Hoard case study
+> below.
 
 ## Validated on real APIs (billed tokens, not estimates)
 
@@ -108,6 +112,25 @@ one developer, one language, and two early phases' calls were **lost to a loggin
 fixed** (disclosed and excluded) — so the 188 calls are the reliably-logged subset and the true total
 was higher. Reproduce on your own project: `python -m validate.measure_repo_reduction --repo <path>`
 (direct) and set `TRL_SAVINGS_LOG`, then `python -m validate.savings_report <log>` (live). The exact game repo (WIP, published as a verifiable benchmark) is at **github.com/AryanGonsalves/hoard**.
+
+**Paired billed-token test (added after fair criticism).** The figures above are *content* reduction
+(slice vs whole-file), not billed tokens, and "whole file" is a generous baseline. So we ran the
+harder test: the same tasks through a real agent loop twice — once with the `retrieve_code` /
+`explain_symbol` MCP, once with a plain grep+read agent (`code_search` + `read_file`) — summing
+**provider-billed input tokens over every turn** (tool schemas + growing history + results) on
+`claude-sonnet-5`, with both answers graded 0–3 against the code. Honestly:
+
+- **Quality: neutral** (grader ~1.5/1.5, tied).
+- **Cheaper per retrieval** than grep+read on well-behaved tasks (~2–6×, since one retrieve replaces
+  several search-then-read round-trips).
+- **But an over-retrieval failure mode**: on ~1/3 of tasks the agent looped to 25+ calls and the
+  accumulated slice history ballooned to 280–380k tokens, flipping the total. Across two runs the
+  billed total swung from ~15% cheaper to ~70% costlier vs the shell agent.
+
+So the honest scope: retrieval clearly wins **vs whole-file reads** (a common default) and is
+quality-neutral, but it is **not** a blanket "90%+ billed savings" vs a disciplined shell agent, and
+the over-retrieval blowup is a real defect being fixed (cap calls / leaner slices / stop-and-answer).
+Reproduce: `python -m validate.paired_billed_bench --repo <path> --model claude-sonnet-5`.
 
 | Earlier single-lever / mid-tier runs | Reduction | Quality / correctness |
 |----------------|-----------|-----------------------|

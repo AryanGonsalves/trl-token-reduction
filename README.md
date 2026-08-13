@@ -254,8 +254,18 @@ trl-cli "how does auth refresh work?" --repo /path/to/repo
 Call the pieces from your own code when you control the request path:
 
 ```python
-from trl import Engine
-from trl.util import loa
+from trl import Engine, Message, load_config
+
+engine = Engine(load_config("config.yaml"))
+result = engine.process([
+    Message(role="system", content=BIG_SYSTEM_PROMPT),
+    Message(role="user", content="your request"),
+])
+# result.messages           -> cache-marked prefix + compressed tail, ready to send upstream
+# result.cache_prefix_tokens -> stable-prefix tokens billed at the cache rate
+# result.meta               -> which levers fired
+```
+
 ## Claude Code plugin (retrieval tier)
 
 The repo doubles as a Claude Code plugin **and** its own marketplace — no store, no
